@@ -56,6 +56,7 @@ function App() {
           />
         )}
 
+
         {activeTab === 'SalesPlus' && (
           <SalesPlus
             salesRecords={salesRecords}
