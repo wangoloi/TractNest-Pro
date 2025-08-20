@@ -1,0 +1,55 @@
+import 'express-async-errors';
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import { notFoundHandler, errorHandler } from './middlewares/errorHandler.js';
+import { initializeDatabase } from './infrastructure/database/init.js';
+import { inventoryRoutes } from './domains/inventory/routes.js';
+import { salesRoutes } from './domains/sales/routes.js';
+import { receiptsRoutes } from './domains/receipts/routes.js';
+import { invoicesRoutes } from './domains/invoices/routes.js';
+import { authRoutes } from './domains/auth/routes.js';
+
+const app = express();
+
+// Middleware
+app.use(cors({ origin: process.env.FRONTEND_ORIGIN || '*', credentials: true }));
+app.use(express.json());
+app.use(cookieParser());
+
+// Health check
+app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
+
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/inventory', inventoryRoutes);
+app.use('/api/sales', salesRoutes);
+app.use('/api/receipts', receiptsRoutes);
+app.use('/api/invoices', invoicesRoutes);
+
+// Error handling
+app.use(notFoundHandler);
+app.use(errorHandler);
+
+// Initialize database and start server
+async function startServer() {
+  try {
+    // Initialize database
+    await initializeDatabase();
+    
+    const port = parseInt(process.env.PORT || '4000', 10);
+    app.listen(port, () => {
+      console.log(`🚀 TrackNest Enterprise Backend running on http://localhost:${port}`);
+      console.log(`📊 Health check: http://localhost:${port}/health`);
+      console.log(`🔗 Frontend origin: ${process.env.FRONTEND_ORIGIN || 'http://localhost:5173'}`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
+
+
