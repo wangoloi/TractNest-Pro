@@ -24,7 +24,8 @@ export async function authenticateToken(req, res, next) {
       username: user.username,
       email: user.email,
       role: user.role,
-      organizationId: user.organization_id
+      organization_id: user.organization_id,
+      organizationId: user.organization_id // Keep both for compatibility
     };
     
     next();

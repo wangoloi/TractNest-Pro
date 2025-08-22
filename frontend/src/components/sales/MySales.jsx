@@ -23,25 +23,27 @@ const MySales = () => {
   const fetchInvoices = async () => {
     try {
       setIsLoading(true);
-      const { data } = await api.get('/api/invoices');
+      const { data } = await api.get('/api/sales');
       setInvoices(data);
     } catch (error) {
       toast.error('Failed to fetch sales data');
-      console.error('Error fetching invoices:', error);
+      console.error('Error fetching sales:', error);
+      // Set empty array to prevent UI crashes
+      setInvoices([]);
     } finally {
       setIsLoading(false);
     }
   };
 
   const filteredInvoices = invoices.filter(invoice =>
-    invoice.customer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    invoice.invoice_no?.toLowerCase().includes(searchTerm.toLowerCase())
+    invoice.itemName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    invoice.id?.toString().includes(searchTerm.toLowerCase())
   );
 
-  const sortedInvoices = filteredInvoices.sort((a, b) => new Date(b.date) - new Date(a.date));
+  const sortedInvoices = filteredInvoices.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   // Calculate summary data
-  const totalSalesAmount = invoices.reduce((sum, invoice) => sum + (invoice.total || 0), 0);
+  const totalSalesAmount = invoices.reduce((sum, invoice) => sum + (invoice.totalPrice || 0), 0);
   const totalSalesProfit = invoices.reduce((sum, invoice) => sum + (invoice.profit || 0), 0);
   const totalInvoices = invoices.length;
 
@@ -62,44 +64,36 @@ const MySales = () => {
     
     const doc = new jsPDF();
     
-    // Header
-    doc.setFontSize(20);
-    doc.text('Sales Invoice', 105, 20, { align: 'center' });
+         // Header
+     doc.setFontSize(20);
+     doc.text('Sales Receipt', 105, 20, { align: 'center' });
+     
+     // Sale details
+     doc.setFontSize(12);
+     doc.text(`Sale ID: ${selectedInvoice.id}`, 20, 35);
+     doc.text(`Date: ${new Date(selectedInvoice.createdAt).toLocaleDateString()}`, 20, 45);
+     doc.text(`Item: ${selectedInvoice.itemName}`, 20, 55);
     
-    // Invoice details
-    doc.setFontSize(12);
-    doc.text(`Invoice Number: ${selectedInvoice.invoice_no}`, 20, 35);
-    doc.text(`Date: ${new Date(selectedInvoice.date).toLocaleDateString()}`, 20, 45);
-    doc.text(`Customer: ${selectedInvoice.customer}`, 20, 55);
-    
-    // Items table
-    if (selectedInvoice.items && selectedInvoice.items.length > 0) {
-      const itemsData = selectedInvoice.items.map(item => [
-        item.name,
-        item.qty.toString(),
-        `UGX ${formatNumber(item.unit_price)}`,
-        `UGX ${formatNumber(item.amount)}`,
-        `UGX ${formatNumber(item.profit)}`
-      ]);
-      
-      autoTable(doc, {
-        startY: 65,
-        head: [['Item Name', 'Quantity', 'Unit Price', 'Amount', 'Profit']],
-        body: itemsData,
-        theme: 'grid',
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [72, 187, 120] }
-      });
-      
-      const finalY = doc.lastAutoTable.finalY || 65;
-      doc.setFontSize(14);
-      doc.text(`Total: UGX ${formatNumber(selectedInvoice.total)}`, 150, finalY + 15);
-      doc.text(`Profit: UGX ${formatNumber(selectedInvoice.profit)}`, 150, finalY + 25);
-    } else {
-      doc.text('No items in this invoice.', 20, 75);
-    }
-    
-    doc.save(`invoice-${selectedInvoice.invoice_no}.pdf`);
+         // Sale details table
+     const saleData = [
+       [selectedInvoice.itemName, selectedInvoice.quantity.toString(), `UGX ${formatNumber(selectedInvoice.unitPrice)}`, `UGX ${formatNumber(selectedInvoice.totalPrice)}`, `UGX ${formatNumber(selectedInvoice.profit)}`]
+     ];
+     
+     autoTable(doc, {
+       startY: 65,
+       head: [['Item Name', 'Quantity', 'Unit Price', 'Total', 'Profit']],
+       body: saleData,
+       theme: 'grid',
+       styles: { fontSize: 10 },
+       headStyles: { fillColor: [72, 187, 120] }
+     });
+     
+     const finalY = doc.lastAutoTable.finalY || 65;
+     doc.setFontSize(14);
+     doc.text(`Total: UGX ${formatNumber(selectedInvoice.totalPrice)}`, 150, finalY + 15);
+     doc.text(`Profit: UGX ${formatNumber(selectedInvoice.profit)}`, 150, finalY + 25);
+     
+     doc.save(`sale-${selectedInvoice.id}.pdf`);
   };
 
   const handleEditItem = (item, index) => {
@@ -207,32 +201,32 @@ const MySales = () => {
                   onClick={() => handleInvoiceSelect(invoice)}
                 >
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500 mb-1">Date</p>
-                      <p className="font-semibold text-gray-900">
-                        {new Date(invoice.date).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500 mb-1">Customer</p>
-                      <p className="font-semibold text-gray-900">{invoice.customer}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500 mb-1">Total Amount</p>
-                      <p className="font-semibold text-green-600">UGX {formatNumber(invoice.total)}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500 mb-1">Profit</p>
-                      <p className="font-semibold text-blue-600">UGX {formatNumber(invoice.profit)}</p>
-                    </div>
+                                         <div>
+                       <p className="text-sm text-gray-500 mb-1">Date</p>
+                       <p className="font-semibold text-gray-900">
+                         {new Date(invoice.createdAt).toLocaleDateString()}
+                       </p>
+                     </div>
+                     <div>
+                       <p className="text-sm text-gray-500 mb-1">Item</p>
+                       <p className="font-semibold text-gray-900">{invoice.itemName}</p>
+                     </div>
+                     <div>
+                       <p className="text-sm text-gray-500 mb-1">Total Amount</p>
+                       <p className="font-semibold text-green-600">UGX {formatNumber(invoice.totalPrice)}</p>
+                     </div>
+                     <div>
+                       <p className="text-sm text-gray-500 mb-1">Profit</p>
+                       <p className="font-semibold text-blue-600">UGX {formatNumber(invoice.profit)}</p>
+                     </div>
                   </div>
-                  <div className="mt-3 flex items-center justify-between">
-                    <span className="text-sm text-gray-500">Invoice: {invoice.invoice_no}</span>
-                    <div className="flex items-center text-sm text-gray-500">
-                      <Eye size={16} className="mr-1" />
-                      Click to view details
-                    </div>
-                  </div>
+                                     <div className="mt-3 flex items-center justify-between">
+                     <span className="text-sm text-gray-500">Sale ID: {invoice.id}</span>
+                     <div className="flex items-center text-sm text-gray-500">
+                       <Eye size={16} className="mr-1" />
+                       Click to view details
+                     </div>
+                   </div>
                 </div>
               ))
             ) : (
@@ -261,15 +255,15 @@ const MySales = () => {
                 <ArrowLeft size={16} />
                 Back to Sales
               </button>
-              <h3 className="text-xl font-semibold text-gray-800">Invoice Details</h3>
+                             <h3 className="text-xl font-semibold text-gray-800">Sale Details</h3>
             </div>
             <div className="flex gap-2">
               <button
                 onClick={handlePrint}
                 className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
               >
-                <Printer size={16} />
-                Print Invoice
+                                 <Printer size={16} />
+                 Print Sale
               </button>
               <button
                 onClick={() => setIsEditing(!isEditing)}
@@ -279,39 +273,39 @@ const MySales = () => {
                     : 'bg-yellow-400 hover:bg-yellow-500 text-gray-800'
                 }`}
               >
-                <Edit size={16} />
-                {isEditing ? 'Cancel Edit' : 'Edit Invoice'}
+                                 <Edit size={16} />
+                 {isEditing ? 'Cancel Edit' : 'Edit Sale'}
               </button>
             </div>
           </div>
 
           {/* Invoice Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-6 bg-gray-50 rounded-lg">
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Invoice Number</p>
-              <p className="font-semibold text-gray-900">{selectedInvoice.invoice_no}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Date</p>
-              <p className="font-semibold text-gray-900">
-                {new Date(selectedInvoice.date).toLocaleDateString()}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Customer</p>
-              <p className="font-semibold text-gray-900">{selectedInvoice.customer}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Total Amount</p>
-              <p className="font-semibold text-lg text-green-600">UGX {formatNumber(selectedInvoice.total)}</p>
-            </div>
-          </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-6 bg-gray-50 rounded-lg">
+             <div>
+               <p className="text-sm text-gray-500 mb-1">Sale ID</p>
+               <p className="font-semibold text-gray-900">{selectedInvoice.id}</p>
+             </div>
+             <div>
+               <p className="text-sm text-gray-500 mb-1">Date</p>
+               <p className="font-semibold text-gray-900">
+                 {new Date(selectedInvoice.createdAt).toLocaleDateString()}
+               </p>
+             </div>
+             <div>
+               <p className="text-sm text-gray-500 mb-1">Item</p>
+               <p className="font-semibold text-gray-900">{selectedInvoice.itemName}</p>
+             </div>
+             <div>
+               <p className="text-sm text-gray-500 mb-1">Total Amount</p>
+               <p className="font-semibold text-lg text-green-600">UGX {formatNumber(selectedInvoice.totalPrice)}</p>
+             </div>
+           </div>
 
           {/* Items Table */}
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-              <h4 className="text-lg font-semibold text-gray-800">Items Sold</h4>
-            </div>
+                         <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+               <h4 className="text-lg font-semibold text-gray-800">Sale Details</h4>
+             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -338,116 +332,41 @@ const MySales = () => {
                     )}
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {(selectedInvoice.items || []).map((item, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      {editItemIndex === index ? (
-                        <>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <input
-                              type="text"
-                              value={editItem.name}
-                              onChange={(e) => setEditItem({ ...editItem, name: e.target.value })}
-                              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                            />
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <input
-                              type="number"
-                              value={editItem.qty}
-                              onChange={(e) => setEditItem({ ...editItem, qty: parseFloat(e.target.value) || 0 })}
-                              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                            />
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <input
-                              type="number"
-                              value={editItem.unit_price}
-                              onChange={(e) => setEditItem({ ...editItem, unit_price: parseFloat(e.target.value) || 0 })}
-                              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                            />
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            UGX {formatNumber(editItem.qty * editItem.unit_price)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            UGX {formatNumber((editItem.qty * editItem.unit_price) * 0.2)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <div className="flex gap-2">
-                              <button 
-                                onClick={handleSaveEdit}
-                                className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-xs"
-                              >
-                                Save
-                              </button>
-                              <button 
-                                onClick={handleCancelEdit}
-                                className="px-3 py-1 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors text-xs"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </td>
-                        </>
-                      ) : (
-                        <>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {item.name}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.qty}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            UGX {formatNumber(item.unit_price)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            UGX {formatNumber(item.amount)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            UGX {formatNumber(item.profit)}
-                          </td>
-                          {isEditing && (
-                            <td className="px-6 py-4 whitespace-nowrap text-sm">
-                              <div className="flex gap-2">
-                                <button 
-                                  onClick={() => handleEditItem(item, index)}
-                                  className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                                  title="Edit item"
-                                >
-                                  <Edit size={14} />
-                                </button>
-                                <button 
-                                  onClick={() => handleDeleteItem(index)}
-                                  className="p-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                                  title="Delete item"
-                                >
-                                  <Trash2 size={14} />
-                                </button>
-                              </div>
-                            </td>
-                          )}
-                        </>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
+                                                  <tbody className="bg-white divide-y divide-gray-200">
+                   <tr className="hover:bg-gray-50">
+                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                       {selectedInvoice.itemName}
+                     </td>
+                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                       {selectedInvoice.quantity}
+                     </td>
+                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                       UGX {formatNumber(selectedInvoice.unitPrice)}
+                     </td>
+                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                       UGX {formatNumber(selectedInvoice.totalPrice)}
+                     </td>
+                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                       UGX {formatNumber(selectedInvoice.profit)}
+                     </td>
+                   </tr>
+                 </tbody>
               </table>
             </div>
           </div>
 
           {/* Summary */}
           <div className="p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-100">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Total Profit</p>
-                <p className="text-2xl font-bold text-green-600">UGX {formatNumber(selectedInvoice.profit)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Total Amount</p>
-                <p className="text-2xl font-bold text-blue-600">UGX {formatNumber(selectedInvoice.total)}</p>
-              </div>
-            </div>
+                         <div className="flex justify-between items-center">
+               <div>
+                 <p className="text-sm text-gray-500 mb-1">Total Profit</p>
+                 <p className="text-2xl font-bold text-green-600">UGX {formatNumber(selectedInvoice.profit)}</p>
+               </div>
+               <div>
+                 <p className="text-sm text-gray-500 mb-1">Total Amount</p>
+                 <p className="text-2xl font-bold text-blue-600">UGX {formatNumber(selectedInvoice.totalPrice)}</p>
+               </div>
+             </div>
           </div>
         </div>
       )}

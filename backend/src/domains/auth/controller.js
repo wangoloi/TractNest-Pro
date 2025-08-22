@@ -1,7 +1,12 @@
-import { register, login } from './service.js';
+import { register, login, registerCustomer } from './service.js';
 
 export async function registerController(req, res) {
   const created = await register(req.body);
+  res.status(201).json(created);
+}
+
+export async function registerCustomerController(req, res) {
+  const created = await registerCustomer(req.body);
   res.status(201).json(created);
 }
 

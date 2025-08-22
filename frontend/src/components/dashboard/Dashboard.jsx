@@ -12,12 +12,19 @@ import {
   PieChart,
   Activity,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  RefreshCw,
+  Zap,
+  Target,
+  Award
 } from 'lucide-react';
 import api from '@utils/api';
 import { formatNumber } from '../../utils/formatNumber';
+import { useAuth } from '../../contexts/AuthContext';
+import CustomerDashboard from '../customer/CustomerDashboard';
 
 const Dashboard = () => {
+  const { user } = useAuth();
   const [stats, setStats] = useState({
     totalSales: 0,
     totalProfit: 0,
@@ -31,43 +38,49 @@ const Dashboard = () => {
   const [recentActivity, setRecentActivity] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
+    // If user is a customer, don't fetch admin data
+    if (user?.role === 'customer') {
+      setLoading(false);
+      return;
+    }
     fetchDashboardData();
-  }, []);
+  }, [user]);
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
       
       // Fetch all data in parallel
-      const [inventoryRes, invoicesRes, receiptsRes] = await Promise.all([
+      const [inventoryRes, salesRes, receiptsRes] = await Promise.all([
         api.get('/api/inventory'),
-        api.get('/api/invoices'),
+        api.get('/api/sales'),
         api.get('/api/receipts')
       ]);
 
       const inventory = inventoryRes.data;
-      const invoices = invoicesRes.data;
+      const sales = salesRes.data;
       const receipts = receiptsRes.data;
 
       // Calculate statistics
-      const totalSales = invoices.reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
-      const totalProfit = invoices.reduce((sum, inv) => sum + (inv.total_profit || 0), 0);
-      const totalInvoices = invoices.length;
+      const totalSales = sales.reduce((sum, sale) => sum + (sale.totalPrice || 0), 0);
+      const totalProfit = sales.reduce((sum, sale) => sum + (sale.profit || 0), 0);
+      const totalInvoices = sales.length;
       const totalItems = inventory.length;
-      const lowStockItems = inventory.filter(item => item.quantity <= (item.reorder_level || 10)).length;
-      const pendingInvoices = invoices.filter(inv => inv.payment_status === 'pending').length;
+      const lowStockItems = inventory.filter(item => (item.quantity || item.qty || 0) <= (item.reorder_level || 10)).length;
+      const pendingInvoices = 0; // Sales don't have payment status
       const profitMargin = totalSales > 0 ? (totalProfit / totalSales) * 100 : 0;
 
       // Calculate monthly growth (simplified)
       const currentMonth = new Date().getMonth();
-      const currentMonthInvoices = invoices.filter(inv => new Date(inv.date).getMonth() === currentMonth);
-      const lastMonthInvoices = invoices.filter(inv => new Date(inv.date).getMonth() === currentMonth - 1);
+      const currentMonthSales = sales.filter(sale => new Date(sale.createdAt).getMonth() === currentMonth);
+      const lastMonthSales = sales.filter(sale => new Date(sale.createdAt).getMonth() === currentMonth - 1);
       
-      const currentMonthSales = currentMonthInvoices.reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
-      const lastMonthSales = lastMonthInvoices.reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
-      const monthlyGrowth = lastMonthSales > 0 ? ((currentMonthSales - lastMonthSales) / lastMonthSales) * 100 : 0;
+      const currentMonthTotal = currentMonthSales.reduce((sum, sale) => sum + (sale.totalPrice || 0), 0);
+      const lastMonthTotal = lastMonthSales.reduce((sum, sale) => sum + (sale.totalPrice || 0), 0);
+      const monthlyGrowth = lastMonthTotal > 0 ? ((currentMonthTotal - lastMonthTotal) / lastMonthTotal) * 100 : 0;
 
       setStats({
         totalSales,
@@ -81,33 +94,33 @@ const Dashboard = () => {
       });
 
       // Get recent activity
-      const recentInvoices = invoices
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
+      const recentSales = sales
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
         .slice(0, 5)
-        .map(inv => ({
-          id: inv.id,
-          type: 'invoice',
-          title: `Invoice ${inv.invoice_no}`,
-          description: inv.customer_name,
-          amount: inv.total_amount,
-          date: inv.date,
-          status: inv.payment_status
+        .map(sale => ({
+          id: sale.id,
+          type: 'sale',
+          title: `Sale ${sale.id}`,
+          description: sale.itemName,
+          amount: sale.totalPrice,
+          date: sale.createdAt,
+          status: 'completed'
         }));
 
       const recentReceipts = receipts
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
         .slice(0, 5)
-        .map(rec => ({
-          id: rec.id,
+        .map(receipt => ({
+          id: receipt.id,
           type: 'receipt',
-          title: `Receipt ${rec.receipt_no}`,
-          description: rec.supplier_name,
-          amount: rec.total_amount,
-          date: rec.date,
-          status: rec.status
+          title: `Receipt ${receipt.id}`,
+          description: receipt.itemName,
+          amount: receipt.total,
+          date: receipt.createdAt,
+          status: 'completed'
         }));
 
-      const allActivity = [...recentInvoices, ...recentReceipts]
+      const allActivity = [...recentSales, ...recentReceipts]
         .sort((a, b) => new Date(b.date) - new Date(a.date))
         .slice(0, 8);
 
@@ -115,25 +128,22 @@ const Dashboard = () => {
 
       // Get top products
       const productSales = {};
-      invoices.forEach(inv => {
-        if (inv.items) {
-          inv.items.forEach(item => {
-            if (!productSales[item.name]) {
-              productSales[item.name] = { sales: 0, quantity: 0 };
-            }
-            productSales[item.name].sales += item.total_price || 0;
-            productSales[item.name].quantity += item.quantity || 0;
-          });
+      sales.forEach(sale => {
+        const productName = sale.itemName;
+        if (!productSales[productName]) {
+          productSales[productName] = { sales: 0, revenue: 0 };
         }
+        productSales[productName].sales += sale.quantity || 1;
+        productSales[productName].revenue += sale.totalPrice || 0;
       });
 
       const topProductsList = Object.entries(productSales)
         .map(([name, data]) => ({
           name,
           sales: data.sales,
-          quantity: data.quantity
+          revenue: data.revenue
         }))
-        .sort((a, b) => b.sales - a.sales)
+        .sort((a, b) => b.revenue - a.revenue)
         .slice(0, 5);
 
       setTopProducts(topProductsList);
@@ -145,68 +155,22 @@ const Dashboard = () => {
     }
   };
 
-  const StatCard = ({ title, value, icon: Icon, trend, trendValue, color = 'blue' }) => (
-    <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
-          {trend && (
-            <div className="flex items-center mt-2">
-              {trend === 'up' ? (
-                <ArrowUpRight size={16} className="text-green-500 mr-1" />
-              ) : (
-                <ArrowDownRight size={16} className="text-red-500 mr-1" />
-              )}
-              <span className={`text-sm font-medium ${trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-                {trendValue}
-              </span>
-            </div>
-          )}
-        </div>
-        <div className={`p-3 rounded-lg bg-${color}-50`}>
-          <Icon size={24} className={`text-${color}-600`} />
-        </div>
-      </div>
-    </div>
-  );
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchDashboardData();
+    setRefreshing(false);
+  };
 
-  const ActivityItem = ({ activity }) => (
-    <div className="flex items-center gap-4 p-4 hover:bg-gray-50 rounded-lg transition-colors">
-      <div className={`p-2 rounded-lg ${
-        activity.type === 'invoice' ? 'bg-blue-50' : 'bg-green-50'
-      }`}>
-        {activity.type === 'invoice' ? (
-          <ShoppingCart size={16} className="text-blue-600" />
-        ) : (
-          <Package size={16} className="text-green-600" />
-        )}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900 truncate">{activity.title}</p>
-        <p className="text-sm text-gray-500 truncate">{activity.description}</p>
-      </div>
-      <div className="text-right">
-        <p className="text-sm font-medium text-gray-900">UGX {formatNumber(activity.amount)}</p>
-        <p className="text-xs text-gray-500">{new Date(activity.date).toLocaleDateString()}</p>
-      </div>
-    </div>
-  );
+  // If user is a customer, show customer dashboard
+  if (user?.role === 'customer') {
+    return <CustomerDashboard />;
+  }
 
+  // Show admin dashboard for admin/owner users
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-white rounded-xl border border-gray-200 p-6">
-                <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600"></div>
       </div>
     );
   }
@@ -216,183 +180,184 @@ const Dashboard = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600">Welcome back! Here's what's happening with your business today.</p>
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-600">Welcome back! Here's what's happening with your business.</p>
         </div>
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-          <Calendar size={16} />
-          <span>{new Date().toLocaleDateString('en-US', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          })}</span>
-        </div>
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+        >
+          <RefreshCw className={`${refreshing ? 'animate-spin' : ''}`} size={20} />
+          Refresh
+        </button>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          title="Total Sales"
-          value={`UGX ${formatNumber(stats.totalSales)}`}
-          icon={DollarSign}
-          trend={stats.monthlyGrowth > 0 ? 'up' : 'down'}
-          trendValue={`${Math.abs(stats.monthlyGrowth).toFixed(1)}% from last month`}
-          color="green"
-        />
-        <StatCard
-          title="Total Profit"
-          value={`UGX ${formatNumber(stats.totalProfit)}`}
-          icon={TrendingUp}
-          trend="up"
-          trendValue={`${stats.profitMargin.toFixed(1)}% margin`}
-          color="blue"
-        />
-        <StatCard
-          title="Total Invoices"
-          value={stats.totalInvoices}
-          icon={ShoppingCart}
-          color="purple"
-        />
-        <StatCard
-          title="Inventory Items"
-          value={stats.totalItems}
-          icon={Package}
-          color="orange"
-        />
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Sales</p>
+              <p className="text-2xl font-bold text-gray-900">${formatNumber(stats.totalSales)}</p>
+              <div className="flex items-center mt-2">
+                {stats.monthlyGrowth >= 0 ? (
+                  <ArrowUpRight className="text-green-600" size={16} />
+                ) : (
+                  <ArrowDownRight className="text-red-600" size={16} />
+                )}
+                <span className={`text-sm font-medium ml-1 ${
+                  stats.monthlyGrowth >= 0 ? 'text-green-600' : 'text-red-600'
+                }`}>
+                  {Math.abs(stats.monthlyGrowth).toFixed(1)}%
+                </span>
+                <span className="text-sm text-gray-500 ml-1">vs last month</span>
+              </div>
+            </div>
+            <div className="bg-green-100 rounded-full p-3">
+              <DollarSign className="text-green-600" size={24} />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Profit</p>
+              <p className="text-2xl font-bold text-gray-900">${formatNumber(stats.totalProfit)}</p>
+              <p className="text-sm text-gray-500 mt-2">{stats.profitMargin.toFixed(1)}% margin</p>
+            </div>
+            <div className="bg-blue-100 rounded-full p-3">
+              <TrendingUp className="text-blue-600" size={24} />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Items</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.totalItems}</p>
+              <p className="text-sm text-red-600 mt-2">{stats.lowStockItems} low stock</p>
+            </div>
+            <div className="bg-purple-100 rounded-full p-3">
+              <Package className="text-purple-600" size={24} />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Invoices</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.totalInvoices}</p>
+              <p className="text-sm text-gray-500 mt-2">{stats.pendingInvoices} pending</p>
+            </div>
+            <div className="bg-orange-100 rounded-full p-3">
+              <ShoppingCart className="text-orange-600" size={24} />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Alerts and Quick Stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Alerts */}
-        <div className="lg:col-span-1">
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <AlertTriangle size={20} className="text-orange-500" />
-              Alerts
-            </h3>
-            <div className="space-y-3">
-              {stats.lowStockItems > 0 && (
-                <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <Package size={16} className="text-orange-600" />
-                    <span className="text-sm font-medium text-orange-800">Low Stock Items</span>
+      {/* Charts and Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Activity */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+              <Activity size={24} />
+              Recent Activity
+            </h2>
+          </div>
+          <div className="p-6">
+            <div className="space-y-4">
+              {recentActivity.map((activity) => (
+                <div key={`${activity.type}-${activity.id}`} className="flex items-center gap-4">
+                  <div className={`rounded-full p-2 ${
+                    activity.type === 'sale' ? 'bg-green-100' : 'bg-blue-100'
+                  }`}>
+                    {activity.type === 'sale' ? (
+                      <ShoppingCart className="text-green-600" size={16} />
+                    ) : (
+                      <Package className="text-blue-600" size={16} />
+                    )}
                   </div>
-                  <span className="text-sm font-bold text-orange-600">{stats.lowStockItems}</span>
-                </div>
-              )}
-              {stats.pendingInvoices > 0 && (
-                <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <ShoppingCart size={16} className="text-yellow-600" />
-                    <span className="text-sm font-medium text-yellow-800">Pending Invoices</span>
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">{activity.title}</p>
+                    <p className="text-sm text-gray-600">{activity.description}</p>
+                    <p className="text-xs text-gray-500">{new Date(activity.date).toLocaleDateString()}</p>
                   </div>
-                  <span className="text-sm font-bold text-yellow-600">{stats.pendingInvoices}</span>
+                  <div className="text-right">
+                    <p className="font-medium text-gray-900">${formatNumber(activity.amount)}</p>
+                    <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">
+                      {activity.status}
+                    </span>
+                  </div>
                 </div>
-              )}
-              {stats.lowStockItems === 0 && stats.pendingInvoices === 0 && (
-                <div className="text-center py-4 text-gray-500">
-                  <div className="text-green-500 mb-2">✓</div>
-                  <p className="text-sm">All systems running smoothly</p>
-                </div>
-              )}
+              ))}
             </div>
           </div>
         </div>
 
         {/* Top Products */}
-        <div className="lg:col-span-2">
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <BarChart3 size={20} className="text-blue-500" />
-              Top Selling Products
-            </h3>
-            <div className="space-y-3">
-              {topProducts.length > 0 ? (
-                topProducts.map((product, index) => (
-                  <div key={product.name} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <span className="text-sm font-bold text-blue-600">{index + 1}</span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{product.name}</p>
-                        <p className="text-xs text-gray-500">{product.quantity} units sold</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-gray-900">UGX {formatNumber(product.sales)}</p>
-                    </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+              <BarChart3 size={24} />
+              Top Products
+            </h2>
+          </div>
+          <div className="p-6">
+            <div className="space-y-4">
+              {topProducts.map((product, index) => (
+                <div key={product.name} className="flex items-center gap-4">
+                  <div className="bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center">
+                    <span className="text-sm font-medium text-gray-600">{index + 1}</span>
                   </div>
-                ))
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <BarChart3 size={48} className="mx-auto text-gray-300 mb-4" />
-                  <p className="text-sm">No sales data available</p>
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">{product.name}</p>
+                    <p className="text-sm text-gray-600">{product.sales} units sold</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium text-gray-900">${formatNumber(product.revenue)}</p>
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Recent Activity */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Activity size={20} className="text-green-500" />
-          Recent Activity
-        </h3>
-        <div className="space-y-2">
-          {recentActivity.length > 0 ? (
-            recentActivity.map((activity) => (
-              <ActivityItem key={`${activity.type}-${activity.id}`} activity={activity} />
-            ))
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <Activity size={48} className="mx-auto text-gray-300 mb-4" />
-              <p className="text-sm">No recent activity</p>
-            </div>
-          )}
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <button className="p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors text-left">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <ShoppingCart size={20} className="text-blue-600" />
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <Zap size={24} />
+          Quick Actions
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
+            <ShoppingCart className="text-green-600" size={20} />
+            <div className="text-left">
+              <p className="font-medium text-green-900">New Sale</p>
+              <p className="text-sm text-green-700">Create a new sale</p>
             </div>
-            <div>
-              <p className="font-medium text-blue-900">Create Invoice</p>
-              <p className="text-sm text-blue-700">Generate a new sales invoice</p>
+          </button>
+          <button className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">
+            <Package className="text-blue-600" size={20} />
+            <div className="text-left">
+              <p className="font-medium text-blue-900">Add Stock</p>
+              <p className="text-sm text-blue-700">Add new inventory</p>
             </div>
-          </div>
-        </button>
-        
-        <button className="p-4 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors text-left">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <Package size={20} className="text-green-600" />
+          </button>
+          <button className="flex items-center gap-3 p-4 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">
+            <Users className="text-purple-600" size={20} />
+            <div className="text-left">
+              <p className="font-medium text-purple-900">Manage Customers</p>
+              <p className="text-sm text-purple-700">View customer list</p>
             </div>
-            <div>
-              <p className="font-medium text-green-900">Add Stock</p>
-              <p className="text-sm text-green-700">Record new inventory items</p>
-            </div>
-          </div>
-        </button>
-        
-        <button className="p-4 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors text-left">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <BarChart3 size={20} className="text-purple-600" />
-            </div>
-            <div>
-              <p className="font-medium text-purple-900">View Reports</p>
-              <p className="text-sm text-purple-700">Analyze business performance</p>
-            </div>
-          </div>
-        </button>
+          </button>
+        </div>
       </div>
     </div>
   );

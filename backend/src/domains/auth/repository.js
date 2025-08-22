@@ -1,34 +1,43 @@
-import { query } from '../../infrastructure/database/mysql.js';
+import { pool } from '../../infrastructure/database/mysql.js';
 
 export async function findUserByUsername(username) {
-  const rows = await query(`
-    SELECT u.id, u.username, u.email, u.password_hash AS passwordHash, u.role, u.organization_id
-    FROM users u 
-    WHERE u.username = ?
-  `, [username]);
-  return rows[0] || null;
-}
-
-export async function createUser({ username, email, passwordHash, role = 'user', organizationId }) {
-  const result = await query(
-    'INSERT INTO users (username, email, password_hash, role, organization_id) VALUES (?, ?, ?, ?, ?)', 
-    [username, email, passwordHash, role, organizationId]
+  const [rows] = await pool.execute(
+    'SELECT * FROM users WHERE username = ?',
+    [username]
   );
-  return { id: result.insertId, username, email, role, organizationId };
+  return rows[0];
 }
 
 export async function findUserById(id) {
-  const rows = await query(`
-    SELECT u.id, u.username, u.email, u.role, u.organization_id, o.name as organization_name
-    FROM users u 
-    JOIN organizations o ON u.organization_id = o.id
-    WHERE u.id = ?
-  `, [id]);
-  return rows[0] || null;
+  const [rows] = await pool.execute(
+    'SELECT * FROM users WHERE id = ?',
+    [id]
+  );
+  return rows[0];
+}
+
+export async function createUser({ username, email, passwordHash, organizationId, role = 'user', first_name, last_name }) {
+  const [result] = await pool.execute(
+    'INSERT INTO users (username, email, password_hash, role, organization_id, first_name, last_name) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [username, email, passwordHash, role, organizationId, first_name, last_name]
+  );
+  
+  return {
+    id: result.insertId,
+    username,
+    email,
+    role,
+    organization_id: organizationId,
+    first_name,
+    last_name
+  };
 }
 
 export async function updateLastLogin(userId) {
-  await query('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?', [userId]);
+  await pool.execute(
+    'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
+    [userId]
+  );
 }
 
 

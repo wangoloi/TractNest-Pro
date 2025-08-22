@@ -52,19 +52,22 @@ const MyStock = ({ stockItems, receipts, totalStockAmount, setReceipts }) => {
     if (stockItems && stockItems.length > 0) {
       stockItems.forEach((item) => {
         // Only include items with quantity > 0
-        if (item.qty > 0) {
+        const itemQty = item.qty || item.quantity || 0;
+        const itemAmount = item.amount || (item.selling_price * itemQty) || 0;
+        
+        if (itemQty > 0) {
           const normalized = normalizeName(item.name);
           if (itemMap[normalized]) {
-            itemMap[normalized].qty += item.qty;
-            itemMap[normalized].totalAmount += item.amount;
+            itemMap[normalized].qty += itemQty;
+            itemMap[normalized].totalAmount += itemAmount;
             if (!nameMap[normalized]) {
               nameMap[normalized] = item.name;
             }
           } else {
             itemMap[normalized] = {
               name: item.name,
-              qty: item.qty,
-              totalAmount: item.amount,
+              qty: itemQty,
+              totalAmount: itemAmount,
             };
             nameMap[normalized] = item.name;
           }

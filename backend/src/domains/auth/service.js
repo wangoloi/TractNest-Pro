@@ -6,7 +6,20 @@ import { findUserByUsername, createUser, updateLastLogin } from './repository.js
 const credsSchema = z.object({ 
   username: z.string().min(3), 
   email: z.string().email(),
-  password: z.string().min(6) 
+  password: z.string().min(6),
+  role: z.enum(['admin', 'manager', 'user', 'customer']).optional().default('user'),
+  first_name: z.string().min(1).optional(),
+  last_name: z.string().min(1).optional()
+});
+
+const customerRegSchema = z.object({ 
+  username: z.string().min(3), 
+  email: z.string().email(),
+  password: z.string().min(6),
+  first_name: z.string().min(1),
+  last_name: z.string().min(1),
+  phone: z.string().optional(),
+  address: z.string().optional()
 });
 
 const loginSchema = z.object({ 
@@ -15,7 +28,7 @@ const loginSchema = z.object({
 });
 
 export async function register(payload) {
-  const { username, email, password } = credsSchema.parse(payload);
+  const { username, email, password, role = 'user', first_name, last_name } = credsSchema.parse(payload);
   
   // Check if username exists in any organization
   const existing = await findUserByUsername(username);
@@ -29,7 +42,40 @@ export async function register(payload) {
   
   // For now, create user in the demo organization (ID: 1)
   // In a real multi-tenant app, you'd determine the organization from the request context
-  return createUser({ username, email, passwordHash, organizationId: 1 });
+  return createUser({ 
+    username, 
+    email, 
+    passwordHash, 
+    organizationId: 1,
+    role,
+    first_name: first_name || username,
+    last_name: last_name || ''
+  });
+}
+
+export async function registerCustomer(payload) {
+  const { username, email, password, first_name, last_name, phone, address } = customerRegSchema.parse(payload);
+  
+  // Check if username exists in any organization
+  const existing = await findUserByUsername(username);
+  if (existing) {
+    const err = new Error('Username already in use'); 
+    err.status = 409; 
+    throw err;
+  }
+  
+  const passwordHash = await bcrypt.hash(password, 10);
+  
+  // Create customer user with 'customer' role
+  return createUser({ 
+    username, 
+    email, 
+    passwordHash, 
+    organizationId: 1,
+    role: 'customer',
+    first_name,
+    last_name
+  });
 }
 
 export async function login(payload) {
@@ -68,7 +114,9 @@ export async function login(payload) {
       username: user.username, 
       email: user.email,
       role: user.role, 
-      organizationId: user.organization_id 
+      organizationId: user.organization_id,
+      first_name: user.first_name,
+      last_name: user.last_name
     } 
   };
 }

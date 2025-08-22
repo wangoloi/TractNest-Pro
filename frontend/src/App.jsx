@@ -1,19 +1,35 @@
-import React, { useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './contexts/auth';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+// Layout and Error Boundary
 import Layout from './components/layout/Layout';
+import ErrorBoundary from './components/common/ErrorBoundary';
+
+// Auth Components
+import Login from './pages/Login';
+import CustomerRegistration from './components/auth/CustomerRegistration';
+
+// Main Components
 import Dashboard from './components/dashboard/Dashboard';
 import StockingPlus from './components/stocking/StockingPlus';
 import SalesPlus from './components/sales/SalesPlus';
 import MySales from './components/sales/MySales';
 import MyStock from './components/stocking/MyStock';
-import Login from './pages/Login';
-import Notifications from './pages/Notifications';
 import Statements from './pages/Statements';
-import './App.css';
-import api from '@utils/api';
+import Notifications from './pages/Notifications';
+import ContactForm from './components/contact/ContactForm';
+import CustomerList from './components/customers/CustomerList';
+import CustomerMessages from './components/messages/CustomerMessages';
+import AppSettings from './components/settings/AppSettings';
 
+// Admin Components
+import AdminDashboard from './components/admin/AdminDashboard';
+import UserManagement from './components/admin/UserManagement';
 
+// Context
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 // Protected route component
 const ProtectedRoute = ({ children }) => {
@@ -30,113 +46,187 @@ const ProtectedRoute = ({ children }) => {
   return isAuthenticated ? children : <Navigate to="/login" />;
 };
 
-function App() {
-  // State for stock items
-  const [stockItems, setStockItems] = React.useState([]);
+// Admin protected route component
+const AdminProtectedRoute = ({ children }) => {
+  const { isAuthenticated, loading, user } = useAuth();
 
-  // State for receipts and total stock amount
-  const [receipts, setReceipts] = React.useState([]);
-  const [totalStockAmount, setTotalStockAmount] = React.useState(0);
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600"></div>
+      </div>
+    );
+  }
 
-  // State for sales records and total sales/profits
-  const [salesRecords, setSalesRecords] = React.useState([]);
-  const [totalSales, setTotalSales] = React.useState({
-    amount: 0,
-    profit: 0,
-  });
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+
+  // Check if user has admin or owner role
+  const isAdmin = user?.role === 'admin' || user?.role === 'owner';
+  if (!isAdmin) {
+    return <Navigate to="/" />;
+  }
+
+  return children;
+};
+
+// Customer protected route component
+const CustomerProtectedRoute = ({ children }) => {
+  const { isAuthenticated, loading, user } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+
+  // Check if user has customer role
+  const isCustomer = user?.role === 'customer';
+  if (!isCustomer) {
+    return <Navigate to="/" />;
+  }
+
+  return children;
+};
+
+function AppContent() {
+  const [stockItems, setStockItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    (async () => {
+    console.log('🔄 Fetching application data...');
+    const fetchData = async () => {
       try {
-        const [invRes, recRes, invcRes] = await Promise.all([
-          api.get('/api/inventory'),
-          api.get('/api/receipts'),
-          api.get('/api/invoices'),
+        const [customersRes, inventoryRes, receiptsRes, salesRes] = await Promise.all([
+          fetch('http://localhost:4000/api/customers').catch(() => ({ ok: false })),
+          fetch('http://localhost:4000/api/inventory').catch(() => ({ ok: false })),
+          fetch('http://localhost:4000/api/receipts').catch(() => ({ ok: false })),
+          fetch('http://localhost:4000/api/sales').catch(() => ({ ok: false }))
         ]);
-        setStockItems(invRes.data || []);
-        setReceipts(recRes.data || []);
-        setSalesRecords(invcRes.data || []);
-        const grandTotal = (recRes.data || []).reduce((s, r) => s + (r.total || 0), 0);
-        setTotalStockAmount(grandTotal);
-        const totals = (invcRes.data || []).reduce((acc, s) => ({ amount: acc.amount + (s.total || 0), profit: acc.profit + (s.profit || 0) }), { amount: 0, profit: 0 });
-        setTotalSales(totals);
-      } catch (e) {}
-    })();
+
+        if (inventoryRes.ok) {
+          const inventoryData = await inventoryRes.json();
+          setStockItems(inventoryData);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
-  const stockData = stockItems.reduce((acc, item) => {
-    acc[item.name] = item.price;
-    return acc;
-  }, {});
+  const refreshData = () => {
+    setLoading(true);
+    fetch('http://localhost:4000/api/inventory')
+      .then(res => res.json())
+      .then(data => {
+        setStockItems(data);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error('Error refreshing data:', error);
+        setLoading(false);
+      });
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600"></div>
+      </div>
+    );
+  }
 
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/" element={
-        <ProtectedRoute>
-          <Layout stockItems={stockItems} />
-        </ProtectedRoute>
-      }>
-        <Route index element={<Dashboard />} />
-        <Route
-          path="stocking"
-          element={
-            <StockingPlus
-              setStockItems={setStockItems}
-              stockItems={stockItems}
-              receipts={receipts}
-              setReceipts={setReceipts}
-              totalStockAmount={totalStockAmount}
-              setTotalStockAmount={setTotalStockAmount}
-            />
-          }
-        />
-        <Route
-          path="sales"
-          element={
-            <SalesPlus
-              salesRecords={salesRecords}
-              setSalesRecords={setSalesRecords}
-              totalSales={totalSales}
-              setTotalSales={setTotalSales}
-              stockData={stockData}
-              stockItems={stockItems}
-              setStockItems={setStockItems}
-            />
-          }
-        />
-        <Route
-          path="my-stock"
-          element={
-            <MyStock
-              stockItems={stockItems}
-              receipts={receipts}
-              totalStockAmount={totalStockAmount}
-              setReceipts={setReceipts}
-            />
-          }
-        />
-        <Route path="my-sales" element={<MySales />} />
-        <Route
-          path="statements"
-          element={
-            <Statements
-              receipts={receipts}
-              salesRecords={salesRecords}
-            />
-          }
-        />
-        <Route
-          path="notifications"
-          element={
-            <Notifications
-              stockItems={stockItems}
-            />
-          }
-        />
-        {/* <Route path="test" element={<Test />} /> */}
-      </Route>
-    </Routes>
+    <Router>
+      <ErrorBoundary>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register/customer" element={<CustomerRegistration />} />
+          
+          {/* Protected Routes */}
+          <Route path="/" element={
+            <ProtectedRoute>
+              <Layout stockItems={stockItems} refreshData={refreshData} />
+            </ProtectedRoute>
+          }>
+            <Route index element={<Dashboard />} />
+            <Route path="stocking" element={<StockingPlus />} />
+            <Route path="sales" element={<SalesPlus />} />
+            <Route path="my-sales" element={<MySales />} />
+            <Route path="my-stock" element={<MyStock />} />
+            <Route path="statements" element={<Statements />} />
+            <Route path="notifications" element={<Notifications />} />
+            
+            {/* Admin-only routes */}
+            <Route path="contact" element={
+              <AdminProtectedRoute>
+                <ContactForm />
+              </AdminProtectedRoute>
+            } />
+            <Route path="customers" element={
+              <AdminProtectedRoute>
+                <CustomerList />
+              </AdminProtectedRoute>
+            } />
+            <Route path="messages" element={
+              <AdminProtectedRoute>
+                <CustomerMessages />
+              </AdminProtectedRoute>
+            } />
+            <Route path="settings" element={
+              <AdminProtectedRoute>
+                <AppSettings />
+              </AdminProtectedRoute>
+            } />
+            <Route path="admin" element={
+              <AdminProtectedRoute>
+                <AdminDashboard />
+              </AdminProtectedRoute>
+            } />
+            <Route path="admin/users" element={
+              <AdminProtectedRoute>
+                <UserManagement />
+              </AdminProtectedRoute>
+            } />
+          </Route>
+          
+          {/* Catch all route */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </ErrorBoundary>
+    </Router>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+    </AuthProvider>
   );
 }
 

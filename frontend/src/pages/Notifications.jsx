@@ -3,7 +3,7 @@ import { AlertTriangle } from 'lucide-react';
 
 const Notifications = ({ stockItems }) => {
   // Filter items with quantity less than 5
-  const lowStockItems = stockItems.filter(item => item.qty < 5);
+  const lowStockItems = stockItems.filter(item => (item.qty || item.quantity || 0) < 5);
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
@@ -24,7 +24,7 @@ const Notifications = ({ stockItems }) => {
                 {lowStockItems.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{item.name}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{item.qty}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{item.qty || item.quantity || 0}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                         <AlertTriangle size={14} className="mr-1" />

@@ -8,6 +8,11 @@
  * @returns {string} - The normalized name
  */
 export function normalizeName(name, handleSpaces = false) {
+  // Handle invalid inputs
+  if (!name || typeof name !== 'string') {
+    return '';
+  }
+  
   if (handleSpaces) {
     const lowerName = name.toLowerCase().trim();
     return lowerName.replace(/\s+/g, ' ');
