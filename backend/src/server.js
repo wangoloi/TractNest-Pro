@@ -4,6 +4,7 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { notFoundHandler, errorHandler } from './middlewares/errorHandler.js';
+import { requestLogger } from './middlewares/logger.js';
 import { initializeDatabase } from './infrastructure/database/init.js';
 import { inventoryRoutes } from './domains/inventory/routes.js';
 import { publicInventoryRoutes } from './domains/inventory/public-routes.js';
@@ -21,6 +22,7 @@ const app = express();
 app.use(cors({ origin: process.env.FRONTEND_ORIGIN || '*', credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
+app.use(requestLogger);
 
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));

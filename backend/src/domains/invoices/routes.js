@@ -1,6 +1,15 @@
 import { Router } from 'express';
 import { authenticateToken, requireOrganization } from '../../middlewares/auth.js';
-import * as controller from './invoices.controller.js';
+import {
+  listInvoicesController,
+  getInvoiceByIdController,
+  createInvoiceController,
+  updateInvoiceController,
+  deleteInvoiceController,
+  updatePaymentStatusController,
+  getInvoiceStatsController,
+  getRecentInvoicesController
+} from './controller.js';
 
 export const invoicesRoutes = Router();
 
@@ -8,7 +17,14 @@ export const invoicesRoutes = Router();
 invoicesRoutes.use(authenticateToken);
 invoicesRoutes.use(requireOrganization);
 
-invoicesRoutes.get('/', controller.list);
-invoicesRoutes.post('/', controller.create);
+// Invoice routes
+invoicesRoutes.get('/', listInvoicesController);
+invoicesRoutes.get('/stats', getInvoiceStatsController);
+invoicesRoutes.get('/recent', getRecentInvoicesController);
+invoicesRoutes.get('/:id', getInvoiceByIdController);
+invoicesRoutes.post('/', createInvoiceController);
+invoicesRoutes.put('/:id', updateInvoiceController);
+invoicesRoutes.patch('/:id/payment-status', updatePaymentStatusController);
+invoicesRoutes.delete('/:id', deleteInvoiceController);
 
 

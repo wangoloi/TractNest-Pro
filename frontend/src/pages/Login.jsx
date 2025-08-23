@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Lock, User, Eye, EyeOff, Info, CheckCircle, Wifi, UserPlus } from 'lucide-react';
+import { Lock, User, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { useAuth } from '../contexts/AuthContext';
-import api from '@utils/api';
+import { useAuth } from '../contexts/useAuth';
+import ForgotPassword from '../components/auth/ForgotPassword';
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [showCredentials, setShowCredentials] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -50,19 +50,6 @@ const Login = () => {
     }
   };
 
-
-
-  const testConnection = async () => {
-    try {
-      const response = await api.get('/health');
-      toast.success(`✅ Backend connected! Status: ${response.data.status}`);
-      console.log('Backend response:', response.data);
-    } catch (error) {
-      toast.error(`❌ Backend connection failed: ${error.message}`);
-      console.error('Connection test failed:', error);
-    }
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-blue-50 to-indigo-100 p-4">
       <div className="w-full max-w-md">
@@ -75,61 +62,6 @@ const Login = () => {
               TrackNest Pro
             </h1>
             <p className="text-gray-600">Sign in to your account</p>
-          </div>
-
-          {/* Demo Credentials Info */}
-          <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <Info className="text-blue-600 mr-2" size={20} />
-                <span className="text-sm font-medium text-blue-800">Demo Account</span>
-              </div>
-              <button
-                onClick={() => setShowCredentials(!showCredentials)}
-                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-              >
-                {showCredentials ? 'Hide' : 'Show'} Credentials
-              </button>
-            </div>
-            {showCredentials && (
-              <div className="mt-3 space-y-3">
-                <div className="border-b border-gray-200 pb-2">
-                  <div className="text-xs font-medium text-gray-500 mb-2">Demo Admin Account:</div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Username:</span>
-                    <span className="font-mono bg-gray-100 px-2 py-1 rounded">admin</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Password:</span>
-                    <span className="font-mono bg-gray-100 px-2 py-1 rounded">password</span>
-                  </div>
-                  <button
-                    onClick={() => { setUsername('admin'); setPassword('password'); }}
-                    className="w-full mt-2 bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-                  >
-                    Load Demo Credentials
-                  </button>
-                </div>
-                
-                <div>
-                  <div className="text-xs font-medium text-gray-500 mb-2">Main Admin Account:</div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Username:</span>
-                    <span className="font-mono bg-gray-100 px-2 py-1 rounded">bachawa</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Password:</span>
-                    <span className="font-mono bg-gray-100 px-2 py-1 rounded">bachawa123</span>
-                  </div>
-                  <button
-                    onClick={() => { setUsername('bachawa'); setPassword('bachawa123'); }}
-                    className="w-full mt-2 bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
-                  >
-                    Load Bachawa Credentials
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
@@ -146,7 +78,7 @@ const Login = () => {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg transition-all duration-200"
                   placeholder="Enter your username"
                   required
                 />
@@ -163,7 +95,7 @@ const Login = () => {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
+                  className="block w-full px-4 py-3 border border-gray-300 rounded-lg transition-all duration-200"
                   placeholder="Enter your password"
                   required
                 />
@@ -181,24 +113,14 @@ const Login = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                  Remember me
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <a href="#" className="font-medium text-green-600 hover:text-green-500 transition-colors">
-                  Forgot password?
-                </a>
-              </div>
+            <div className="text-sm text-right">
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="font-medium text-green-600 hover:text-green-500 transition-colors"
+              >
+                Forgot password?
+              </button>
             </div>
 
             <button
@@ -223,40 +145,6 @@ const Login = () => {
             </button>
           </form>
 
-          {/* Account Type Selection */}
-          <div className="mt-6 space-y-4">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Account Types</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <Link
-                to="/register/customer"
-                className="flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all duration-200 group"
-              >
-                <UserPlus className="text-gray-600 group-hover:text-green-600" size={20} />
-                <span className="text-sm font-medium text-gray-700 group-hover:text-green-700">
-                  Customer Account
-                </span>
-              </Link>
-              
-              <button
-                onClick={() => toast.info('Admin accounts are created by system administrators. Please contact your admin for access.')}
-                className="flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all duration-200 group"
-              >
-                <Lock className="text-gray-600 group-hover:text-blue-600" size={20} />
-                <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700">
-                  Admin Account
-                </span>
-              </button>
-            </div>
-          </div>
-
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Don't have an account?{' '}
@@ -265,19 +153,14 @@ const Login = () => {
               </Link>
             </p>
           </div>
-
-          {/* Connection Test */}
-          <div className="mt-4 text-center">
-            <button
-              onClick={testConnection}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-            >
-              <Wifi size={16} />
-              Test Backend Connection
-            </button>
-          </div>
         </div>
       </div>
+      
+      {/* Forgot Password Dialog */}
+      <ForgotPassword 
+        isOpen={showForgotPassword} 
+        onClose={() => setShowForgotPassword(false)} 
+      />
     </div>
   );
 };

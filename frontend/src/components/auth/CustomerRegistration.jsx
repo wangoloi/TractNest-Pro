@@ -95,7 +95,7 @@ const CustomerRegistration = () => {
                   required
                   value={formData.first_name}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg transition-colors"
                   placeholder="John"
                 />
               </div>
@@ -113,7 +113,7 @@ const CustomerRegistration = () => {
                   required
                   value={formData.last_name}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg transition-colors"
                   placeholder="Doe"
                 />
               </div>
@@ -134,7 +134,7 @@ const CustomerRegistration = () => {
                 required
                 value={formData.username}
                 onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg transition-colors"
                 placeholder="johndoe"
               />
             </div>
@@ -154,7 +154,7 @@ const CustomerRegistration = () => {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg transition-colors"
                 placeholder="john@example.com"
               />
             </div>
@@ -173,7 +173,7 @@ const CustomerRegistration = () => {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg transition-colors"
                 placeholder="+1234567890"
               />
             </div>
@@ -192,7 +192,7 @@ const CustomerRegistration = () => {
                 value={formData.address}
                 onChange={handleChange}
                 rows={3}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors resize-none"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg transition-colors resize-none"
                 placeholder="123 Main St, City, State, ZIP"
               />
             </div>
@@ -212,7 +212,7 @@ const CustomerRegistration = () => {
                 required
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg transition-colors"
                 placeholder="••••••••"
               />
               <button
@@ -239,7 +239,7 @@ const CustomerRegistration = () => {
                 required
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg transition-colors"
                 placeholder="••••••••"
               />
               <button

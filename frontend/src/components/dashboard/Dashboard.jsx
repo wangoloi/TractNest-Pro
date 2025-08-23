@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import api from '@utils/api';
 import { formatNumber } from '../../utils/formatNumber';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/useAuth';
 import CustomerDashboard from '../customer/CustomerDashboard';
 
 const Dashboard = () => {

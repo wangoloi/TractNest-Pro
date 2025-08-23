@@ -40,4 +40,19 @@ export async function updateLastLogin(userId) {
   );
 }
 
+export async function findUserByEmail(email) {
+  const [rows] = await pool.execute(
+    'SELECT * FROM users WHERE email = ?',
+    [email]
+  );
+  return rows[0];
+}
+
+export async function updatePassword(userId, passwordHash) {
+  await pool.execute(
+    'UPDATE users SET password_hash = ? WHERE id = ?',
+    [passwordHash, userId]
+  );
+}
+
 
