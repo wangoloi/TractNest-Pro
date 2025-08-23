@@ -13,10 +13,12 @@ import CustomerRegistration from './components/auth/CustomerRegistration';
 
 // Main Components
 import Dashboard from './components/dashboard/Dashboard';
-import StockingPlus from './components/stocking/StockingPlus';
-import SalesPlus from './components/sales/SalesPlus';
+import Inventory from './components/inventory/Inventory';
+import Receipts from './components/receipts/Receipts';
 import MySales from './components/sales/MySales';
+import SalesPlus from './components/sales/SalesPlus';
 import MyStock from './components/stocking/MyStock';
+import StockingPlus from './components/stocking/StockingPlus';
 import Statements from './pages/Statements';
 import Notifications from './pages/Notifications';
 import ContactForm from './components/contact/ContactForm';

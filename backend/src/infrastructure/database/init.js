@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 
 export async function initializeDatabase() {
   try {
-    console.log('🔄 Initializing database...');
+    console.log('🔄 Checking database initialization...');
     
     // First, try to create the database if it doesn't exist
     await createDatabaseIfNotExists();
@@ -343,21 +343,21 @@ async function createDatabaseIfNotExists() {
 async function verifyInitialization() {
   try {
     // Check if default organization exists
-    const [orgs] = await pool.execute('SELECT COUNT(*) as count FROM organizations');
+    const [orgs] = await pool().execute('SELECT COUNT(*) as count FROM organizations');
     console.log(`📊 Organizations: ${orgs[0].count}`);
     
     // Check if default user exists
-    const [users] = await pool.execute('SELECT COUNT(*) as count FROM users');
+    const [users] = await pool().execute('SELECT COUNT(*) as count FROM users');
     console.log(`👥 Users: ${users[0].count}`);
     
     // Check if sample data exists
-    const [inventory] = await pool.execute('SELECT COUNT(*) as count FROM inventory_items');
+    const [inventory] = await pool().execute('SELECT COUNT(*) as count FROM inventory_items');
     console.log(`📦 Inventory Items: ${inventory[0].count}`);
     
-    const [invoices] = await pool.execute('SELECT COUNT(*) as count FROM invoices');
+    const [invoices] = await pool().execute('SELECT COUNT(*) as count FROM invoices');
     console.log(`🧾 Invoices: ${invoices[0].count}`);
     
-    const [receipts] = await pool.execute('SELECT COUNT(*) as count FROM receipts');
+    const [receipts] = await pool().execute('SELECT COUNT(*) as count FROM receipts');
     console.log(`📋 Receipts: ${receipts[0].count}`);
     
     const [customers] = await pool.execute('SELECT COUNT(*) as count FROM customers');
@@ -390,7 +390,7 @@ export async function resetDatabase() {
     ];
     
     for (const table of tables) {
-      await pool.execute(`DROP TABLE IF EXISTS ${table}`);
+      await pool().execute(`DROP TABLE IF EXISTS ${table}`);
     }
     
     console.log('✅ Database reset successfully');
