@@ -3,14 +3,14 @@ import { Search, Printer, Save, AlertCircle } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { formatNumber } from '../../utils/formatNumber';
-import { normalizeName } from '../../utils/normalizeName';
+
 import api from '@utils/api';
 import { toast } from 'react-toastify';
 
 const StockingPlus = ({
   stockItems,
   setStockItems,
-  receipts,
+
   setReceipts,
   totalStockAmount,
   setTotalStockAmount,

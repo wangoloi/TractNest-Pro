@@ -13,7 +13,6 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
-import api from '@utils/api';
 import { toast } from 'react-toastify';
 
 const CustomerDashboard = () => {

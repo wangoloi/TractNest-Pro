@@ -29,7 +29,8 @@ import AdminDashboard from './components/admin/AdminDashboard';
 import UserManagement from './components/admin/UserManagement';
 
 // Context
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthContext';
+import { useAuth } from './contexts/useAuth';
 
 // Protected route component
 const ProtectedRoute = ({ children }) => {
@@ -104,7 +105,7 @@ function AppContent() {
     console.log('🔄 Fetching application data...');
     const fetchData = async () => {
       try {
-        const [customersRes, inventoryRes, receiptsRes, salesRes] = await Promise.all([
+        const [, inventoryRes] = await Promise.all([
           fetch('http://localhost:4000/api/customers').catch(() => ({ ok: false })),
           fetch('http://localhost:4000/api/inventory').catch(() => ({ ok: false })),
           fetch('http://localhost:4000/api/receipts').catch(() => ({ ok: false })),

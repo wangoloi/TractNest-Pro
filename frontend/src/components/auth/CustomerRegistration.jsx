@@ -42,7 +42,7 @@ const CustomerRegistration = () => {
 
     setLoading(true);
     try {
-      const response = await api.post('/api/auth/register/customer', {
+      await api.post('/api/auth/register/customer', {
         username: formData.username,
         email: formData.email,
         password: formData.password,

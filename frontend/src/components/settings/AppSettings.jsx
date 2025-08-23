@@ -4,7 +4,7 @@ import api from '@utils/api';
 import { toast } from 'react-toastify';
 
 const AppSettings = () => {
-  const [settings, setSettings] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({});
@@ -18,7 +18,6 @@ const AppSettings = () => {
       setLoading(true);
       const response = await api.get('/api/settings');
       const settingsData = response.data;
-      setSettings(settingsData);
       
       // Initialize form data with current settings
       const initialData = {};

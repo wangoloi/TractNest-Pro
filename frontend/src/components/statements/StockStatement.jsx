@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Download } from 'lucide-react';
@@ -9,7 +9,7 @@ const StockStatement = ({ receipts, timePeriod, customStartDate, customEndDate }
   const [totalStockValue, setTotalStockValue] = useState(0);
 
   // Function to get date range based on selection
-  const getDateRange = () => {
+  const getDateRange = useCallback(() => {
     const today = new Date();
     const startDate = new Date();
     const endDate = new Date();
@@ -45,7 +45,7 @@ const StockStatement = ({ receipts, timePeriod, customStartDate, customEndDate }
     }
 
     return { startDate, endDate };
-  };
+  }, [timePeriod, customStartDate, customEndDate]);
 
   // Filter receipts based on date range
   useEffect(() => {
@@ -62,7 +62,7 @@ const StockStatement = ({ receipts, timePeriod, customStartDate, customEndDate }
     // Calculate total stock value for the period
     const totalValue = filtered.reduce((sum, receipt) => sum + receipt.total, 0);
     setTotalStockValue(totalValue);
-  }, [receipts, timePeriod, customStartDate, customEndDate]);
+  }, [receipts, getDateRange]);
 
 
   // Handle print functionality

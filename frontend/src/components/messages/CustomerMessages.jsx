@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { MessageSquare, Mail, Phone, User, Clock, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
 import api from '@utils/api';
 import { toast } from 'react-toastify';
@@ -17,9 +17,9 @@ const CustomerMessages = () => {
 
   useEffect(() => {
     fetchMessages();
-  }, [filters]);
+  }, [fetchMessages]);
 
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async () => {
     try {
       setLoading(true);
       const queryParams = new URLSearchParams();
@@ -35,7 +35,7 @@ const CustomerMessages = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
 
   const handleUpdateStatus = async (messageId, status, adminResponse = null) => {
     try {

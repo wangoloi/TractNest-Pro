@@ -9,45 +9,6 @@ const Statements = ({ receipts, salesRecords }) => {
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
 
-  // Function to get date range based on selection
-  const getDateRange = () => {
-    const today = new Date();
-    const startDate = new Date();
-    const endDate = new Date();
-
-    switch (timePeriod) {
-      case 'this_month':
-        startDate.setDate(1);
-        endDate.setMonth(today.getMonth() + 1);
-        endDate.setDate(0);
-        break;
-      case 'last_month':
-        startDate.setMonth(today.getMonth() - 1);
-        startDate.setDate(1);
-        endDate.setDate(0);
-        break;
-      case 'last_3_months':
-        startDate.setMonth(today.getMonth() - 3);
-        startDate.setDate(1);
-        endDate.setMonth(today.getMonth() + 1);
-        endDate.setDate(0);
-        break;
-      case 'custom':
-        if (customStartDate && customEndDate) {
-          startDate.setTime(new Date(customStartDate).getTime());
-          endDate.setTime(new Date(customEndDate).getTime());
-        }
-        break;
-      default:
-        startDate.setMonth(today.getMonth() - 1);
-        startDate.setDate(1);
-        endDate.setMonth(today.getMonth() + 1);
-        endDate.setDate(0);
-    }
-
-    return { startDate, endDate };
-  };
-
   const handlePrint = () => {
     // This will be handled by the individual statement components
     // We'll pass the date range to the appropriate component

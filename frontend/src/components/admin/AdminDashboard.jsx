@@ -17,14 +17,12 @@ import {
   Zap
 } from 'lucide-react';
 import api from '@utils/api';
-import { toast } from 'react-toastify';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({});
   const [recentActivity, setRecentActivity] = useState([]);
   const [systemHealth, setSystemHealth] = useState({});
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
     fetchAdminData();

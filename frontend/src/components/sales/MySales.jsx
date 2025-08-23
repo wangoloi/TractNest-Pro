@@ -12,8 +12,7 @@ const MySales = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [editItemIndex, setEditItemIndex] = useState(null);
-  const [editItem, setEditItem] = useState({});
+
   const [showSummary, setShowSummary] = useState(false);
 
   useEffect(() => {
@@ -50,13 +49,11 @@ const MySales = () => {
   const handleInvoiceSelect = (invoice) => {
     setSelectedInvoice(invoice);
     setIsEditing(false);
-    setEditItemIndex(null);
   };
 
   const handleBack = () => {
     setSelectedInvoice(null);
     setIsEditing(false);
-    setEditItemIndex(null);
   };
 
   const handlePrint = () => {
@@ -96,36 +93,7 @@ const MySales = () => {
      doc.save(`sale-${selectedInvoice.id}.pdf`);
   };
 
-  const handleEditItem = (item, index) => {
-    setEditItemIndex(index);
-    setEditItem({ ...item });
-  };
 
-  const handleSaveEdit = async () => {
-    try {
-      // In a real implementation, you would update the item via API
-      // For now, we'll just show a success message
-      toast.success('Item updated successfully');
-      setEditItemIndex(null);
-      setEditItem({});
-    } catch (error) {
-      toast.error('Failed to update item');
-    }
-  };
-
-  const handleDeleteItem = async (index) => {
-    try {
-      // In a real implementation, you would delete the item via API
-      toast.success('Item deleted successfully');
-    } catch (error) {
-      toast.error('Failed to delete item');
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setEditItemIndex(null);
-    setEditItem({});
-  };
 
   if (isLoading) {
     return (

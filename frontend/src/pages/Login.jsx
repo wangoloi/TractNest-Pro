@@ -50,11 +50,7 @@ const Login = () => {
     }
   };
 
-  const handleDemoLogin = () => {
-    setUsername('admin');
-    setPassword('password');
-    toast.info('Demo credentials loaded. Click Sign in to continue.');
-  };
+
 
   const testConnection = async () => {
     try {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Download } from 'lucide-react';
@@ -10,7 +10,7 @@ const SalesStatement = ({ salesRecords, timePeriod, customStartDate, customEndDa
   const [totalSalesProfit, setTotalSalesProfit] = useState(0);
 
   // Function to get date range based on selection
-  const getDateRange = () => {
+  const getDateRange = useCallback(() => {
     const today = new Date();
     const startDate = new Date();
     const endDate = new Date();
@@ -46,7 +46,7 @@ const SalesStatement = ({ salesRecords, timePeriod, customStartDate, customEndDa
     }
 
     return { startDate, endDate };
-  };
+  }, [timePeriod, customStartDate, customEndDate]);
 
   // Filter sales records based on date range
   useEffect(() => {
@@ -66,7 +66,7 @@ const SalesStatement = ({ salesRecords, timePeriod, customStartDate, customEndDa
     
     setTotalSalesAmount(totalAmount);
     setTotalSalesProfit(totalProfit);
-  }, [salesRecords, timePeriod, customStartDate, customEndDate]);
+  }, [salesRecords, getDateRange]);
 
 
   // Handle print functionality
