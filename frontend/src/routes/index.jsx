@@ -12,7 +12,6 @@ import ProtectedRoute from '../components/auth/ProtectedRoute';
 // Main Components
 import Dashboard from '../components/dashboard/Dashboard';
 import Inventory from '../components/inventory/Inventory';
-import Receipts from '../components/receipts/Receipts';
 import MySales from '../components/sales/MySales';
 import SalesPlus from '../components/sales/SalesPlus';
 import MyStock from '../components/stocking/MyStock';
@@ -45,6 +44,7 @@ const AppRoutes = ({ stockItems }) => {
         </ProtectedRoute>
       }>
         <Route index element={<Dashboard />} />
+        <Route path="inventory" element={<Inventory />} />
         <Route path="stocking" element={<StockingPlus />} />
         <Route path="sales" element={<SalesPlus />} />
         <Route path="my-sales" element={<MySales />} />

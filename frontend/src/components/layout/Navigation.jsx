@@ -12,7 +12,8 @@ import {
   Users,
   MessageSquare,
   UserPlus,
-  Contact
+  Contact,
+  Box
 } from 'lucide-react';
 import { useAuth } from '../../contexts/useAuth';
 import Tooltip from '../shared/Tooltip';
@@ -30,6 +31,11 @@ const Navigation = ({ activeTab, onTabChange, isCollapsed = false, stockItems = 
       id: 'dashboard', 
       name: 'Dashboard', 
       icon: Home
+    },
+    { 
+      id: 'inventory', 
+      name: 'Inventory', 
+      icon: Box
     },
     { 
       id: 'stocking', 
@@ -101,6 +107,8 @@ const Navigation = ({ activeTab, onTabChange, isCollapsed = false, stockItems = 
       case 'SalesPlus': return 'Sales';
       case 'MySales': return 'My Sales';
       case 'MyStock': return 'My Stock';
+      case 'Inventory': return 'Inventory';
+      case 'Receipts': return 'Receipts';
       case 'Customers': return 'Customers';
       case 'Messages': return 'Messages';
       case 'Contact': return 'Contact Customers';

@@ -32,7 +32,7 @@ api.interceptors.response.use(
     }
     
     // Handle different HTTP status codes
-    const status = error.response.status;
+    const status = error.response?.status;
     let message = error?.response?.data?.message || error.message || 'Request failed';
     
     switch (status) {

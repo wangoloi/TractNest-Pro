@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import api from '@utils/api';
 import { toast } from 'react-toastify';
+import Dropdown from '../shared/Dropdown';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -229,31 +230,35 @@ const UserManagement = () => {
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
-            <select
+            <Dropdown
+              options={[
+                { value: 'all', label: 'All Roles' },
+                { value: 'owner', label: 'Owner' },
+                { value: 'admin', label: 'Admin' },
+                { value: 'manager', label: 'Manager' },
+                { value: 'user', label: 'User' }
+              ]}
               value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">All Roles</option>
-              <option value="owner">Owner</option>
-              <option value="admin">Admin</option>
-              <option value="manager">Manager</option>
-              <option value="user">User</option>
-            </select>
+              onChange={(value) => setRoleFilter(value)}
+              placeholder="Select role..."
+              size="sm"
+            />
           </div>
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-            <select
+            <Dropdown
+              options={[
+                { value: 'all', label: 'All Status' },
+                { value: 'active', label: 'Active' },
+                { value: 'inactive', label: 'Inactive' },
+                { value: 'suspended', label: 'Suspended' }
+              ]}
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="suspended">Suspended</option>
-            </select>
+              onChange={(value) => setStatusFilter(value)}
+              placeholder="Select status..."
+              size="sm"
+            />
           </div>
           
           <div className="flex items-end">
@@ -403,28 +408,32 @@ const UserManagement = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                  <select
+                  <Dropdown
+                    options={[
+                      { value: 'user', label: 'User' },
+                      { value: 'manager', label: 'Manager' },
+                      { value: 'admin', label: 'Admin' },
+                      { value: 'owner', label: 'Owner' }
+                    ]}
                     value={formData.role}
-                    onChange={(e) => setFormData({...formData, role: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="user">User</option>
-                    <option value="manager">Manager</option>
-                    <option value="admin">Admin</option>
-                    <option value="owner">Owner</option>
-                  </select>
+                    onChange={(value) => setFormData({...formData, role: value})}
+                    placeholder="Select role..."
+                    size="sm"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                  <select
+                  <Dropdown
+                    options={[
+                      { value: 'active', label: 'Active' },
+                      { value: 'inactive', label: 'Inactive' },
+                      { value: 'suspended', label: 'Suspended' }
+                    ]}
                     value={formData.status}
-                    onChange={(e) => setFormData({...formData, status: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="suspended">Suspended</option>
-                  </select>
+                    onChange={(value) => setFormData({...formData, status: value})}
+                    placeholder="Select status..."
+                    size="sm"
+                  />
                 </div>
               </div>
             </div>
@@ -502,28 +511,32 @@ const UserManagement = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                  <select
+                  <Dropdown
+                    options={[
+                      { value: 'user', label: 'User' },
+                      { value: 'manager', label: 'Manager' },
+                      { value: 'admin', label: 'Admin' },
+                      { value: 'owner', label: 'Owner' }
+                    ]}
                     value={formData.role}
-                    onChange={(e) => setFormData({...formData, role: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="user">User</option>
-                    <option value="manager">Manager</option>
-                    <option value="admin">Admin</option>
-                    <option value="owner">Owner</option>
-                  </select>
+                    onChange={(value) => setFormData({...formData, role: value})}
+                    placeholder="Select role..."
+                    size="sm"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                  <select
+                  <Dropdown
+                    options={[
+                      { value: 'active', label: 'Active' },
+                      { value: 'inactive', label: 'Inactive' },
+                      { value: 'suspended', label: 'Suspended' }
+                    ]}
                     value={formData.status}
-                    onChange={(e) => setFormData({...formData, status: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="suspended">Suspended</option>
-                  </select>
+                    onChange={(value) => setFormData({...formData, status: value})}
+                    placeholder="Select status..."
+                    size="sm"
+                  />
                 </div>
               </div>
             </div>

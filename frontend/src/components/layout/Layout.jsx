@@ -11,6 +11,7 @@ const Layout = ({ stockItems }) => {
   // Map routes to tab names for backward compatibility
   const routeToTabMap = {
     '/': 'Dashboard',
+    '/inventory': 'Inventory',
     '/stocking': 'StockingPlus',
     '/sales': 'SalesPlus',
     '/my-stock': 'MyStock',
@@ -32,6 +33,7 @@ const Layout = ({ stockItems }) => {
   const handleTabChange = (tab) => {
     const tabToRouteMap = {
       'Dashboard': '/',
+      'Inventory': '/inventory',
       'StockingPlus': '/stocking',
       'SalesPlus': '/sales',
       'MyStock': '/my-stock',

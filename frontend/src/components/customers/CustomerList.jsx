@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Plus, Edit, Trash2, Mail, Phone, User } from 'lucide-react';
 import api from '@utils/api';
 import { toast } from 'react-toastify';
+import Dropdown from '../shared/Dropdown';
 
 const CustomerList = () => {
   const [customers, setCustomers] = useState([]);
@@ -301,14 +302,16 @@ const CustomerList = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Type</label>
-                  <select
+                  <Dropdown
+                    options={[
+                      { value: 'individual', label: 'Individual' },
+                      { value: 'business', label: 'Business' }
+                    ]}
                     value={formData.customer_type}
-                    onChange={(e) => setFormData({...formData, customer_type: e.target.value})}
-                    className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="individual">Individual</option>
-                    <option value="business">Business</option>
-                  </select>
+                    onChange={(value) => setFormData({...formData, customer_type: value})}
+                    placeholder="Select customer type..."
+                    size="sm"
+                  />
                 </div>
               </div>
               <div className="flex gap-2 mt-6">
@@ -386,25 +389,29 @@ const CustomerList = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Type</label>
-                  <select
+                  <Dropdown
+                    options={[
+                      { value: 'individual', label: 'Individual' },
+                      { value: 'business', label: 'Business' }
+                    ]}
                     value={formData.customer_type}
-                    onChange={(e) => setFormData({...formData, customer_type: e.target.value})}
-                    className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="individual">Individual</option>
-                    <option value="business">Business</option>
-                  </select>
+                    onChange={(value) => setFormData({...formData, customer_type: value})}
+                    placeholder="Select customer type..."
+                    size="sm"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Status</label>
-                  <select
+                  <Dropdown
+                    options={[
+                      { value: 'active', label: 'Active' },
+                      { value: 'inactive', label: 'Inactive' }
+                    ]}
                     value={formData.status}
-                    onChange={(e) => setFormData({...formData, status: e.target.value})}
-                    className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
+                    onChange={(value) => setFormData({...formData, status: value})}
+                    placeholder="Select status..."
+                    size="sm"
+                  />
                 </div>
               </div>
               <div className="flex gap-2 mt-6">

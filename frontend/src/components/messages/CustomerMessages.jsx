@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { MessageSquare, Mail, Phone, User, Clock, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
 import api from '@utils/api';
 import { toast } from 'react-toastify';
+import Dropdown from '../shared/Dropdown';
 
 const CustomerMessages = () => {
   const [messages, setMessages] = useState([]);
@@ -125,28 +126,32 @@ const CustomerMessages = () => {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Customer Messages</h2>
         <div className="flex gap-2">
-          <select
+          <Dropdown
+            options={[
+              { value: '', label: 'All Status' },
+              { value: 'new', label: 'New' },
+              { value: 'in_progress', label: 'In Progress' },
+              { value: 'resolved', label: 'Resolved' },
+              { value: 'closed', label: 'Closed' }
+            ]}
             value={filters.status}
-            onChange={(e) => setFilters({...filters, status: e.target.value})}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">All Status</option>
-            <option value="new">New</option>
-            <option value="in_progress">In Progress</option>
-            <option value="resolved">Resolved</option>
-            <option value="closed">Closed</option>
-          </select>
-          <select
+            onChange={(value) => setFilters({...filters, status: value})}
+            placeholder="All Status"
+            size="sm"
+          />
+          <Dropdown
+            options={[
+              { value: '', label: 'All Priorities' },
+              { value: 'urgent', label: 'Urgent' },
+              { value: 'high', label: 'High' },
+              { value: 'medium', label: 'Medium' },
+              { value: 'low', label: 'Low' }
+            ]}
             value={filters.priority}
-            onChange={(e) => setFilters({...filters, priority: e.target.value})}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">All Priorities</option>
-            <option value="urgent">Urgent</option>
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
-          </select>
+            onChange={(value) => setFilters({...filters, priority: value})}
+            placeholder="All Priorities"
+            size="sm"
+          />
         </div>
       </div>
 

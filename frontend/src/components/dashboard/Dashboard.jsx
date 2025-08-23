@@ -22,9 +22,11 @@ import api from '@utils/api';
 import { formatNumber } from '../../utils/formatNumber';
 import { useAuth } from '../../contexts/useAuth';
 import CustomerDashboard from '../customer/CustomerDashboard';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalSales: 0,
     totalProfit: 0,
@@ -53,32 +55,35 @@ const Dashboard = () => {
       return;
     }
     
-    fetchDashboardData();
+    // Add a small delay to ensure authentication is complete
+    const timer = setTimeout(() => {
+      fetchDashboardData();
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [user]);
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
       
-      // Fetch all data in parallel
-      const [inventoryRes, salesRes, receiptsRes] = await Promise.all([
+      // Fetch only necessary data in parallel
+      const [inventoryRes, salesRes] = await Promise.all([
         api.get('/api/inventory'),
-        api.get('/api/sales'),
-        api.get('/api/receipts')
+        api.get('/api/sales')
       ]);
 
-      const inventory = inventoryRes.data;
-      const sales = salesRes.data;
-      const receipts = receiptsRes.data;
+      const inventory = inventoryRes.data || [];
+      const sales = salesRes.data || [];
 
-      console.log(sales, receipts, inventory, "dfdfdfdf");
+      console.log(sales, inventory, "Dashboard data loaded");
 
       // Calculate statistics
       const totalSales = sales.reduce((sum, sale) => sum + (sale.totalPrice || 0), 0);
       const totalProfit = sales.reduce((sum, sale) => sum + (sale.profit || 0), 0);
       const totalInvoices = sales.length;
       const totalItems = inventory.length;
-      const lowStockItems = (inventory || []).filter(item => (item.quantity || item.qty || 0) <= (item.reorder_level || 10)).length;
+      const lowStockItems = inventory.filter(item => (item.quantity || item.qty || 0) <= (item.reorder_level || 10)).length;
       const pendingInvoices = 0; // Sales don't have payment status
       const profitMargin = totalSales > 0 ? (totalProfit / totalSales) * 100 : 0;
 
@@ -105,7 +110,7 @@ const Dashboard = () => {
       // Get recent activity
       const recentSales = sales
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-        .slice(0, 5)
+        .slice(0, 8)
         .map(sale => ({
           id: sale.id,
           type: 'sale',
@@ -116,22 +121,7 @@ const Dashboard = () => {
           status: 'completed'
         }));
 
-      const recentReceipts = receipts
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-        .slice(0, 5)
-        .map(receipt => ({
-          id: receipt.id,
-          type: 'receipt',
-          title: `Receipt ${receipt.id}`,
-          description: receipt.itemName,
-          amount: receipt.total,
-          date: receipt.createdAt,
-          status: 'completed'
-        }));
-
-      const allActivity = [...recentSales, ...recentReceipts]
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
-        .slice(0, 8);
+      const allActivity = recentSales;
 
       setRecentActivity(allActivity);
 
@@ -338,36 +328,45 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Zap size={24} />
-          Quick Actions
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
-            <ShoppingCart className="text-green-600" size={20} />
-            <div className="text-left">
-              <p className="font-medium text-green-900">New Sale</p>
-              <p className="text-sm text-green-700">Create a new sale</p>
-            </div>
-          </button>
-          <button className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">
-            <Package className="text-blue-600" size={20} />
-            <div className="text-left">
-              <p className="font-medium text-blue-900">Add Stock</p>
-              <p className="text-sm text-blue-700">Add new inventory</p>
-            </div>
-          </button>
-          <button className="flex items-center gap-3 p-4 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">
-            <Users className="text-purple-600" size={20} />
-            <div className="text-left">
-              <p className="font-medium text-purple-900">Manage Customers</p>
-              <p className="text-sm text-purple-700">View customer list</p>
-            </div>
-          </button>
-        </div>
-      </div>
+             {/* Quick Actions */}
+       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+         <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+           <Zap size={24} />
+           Quick Actions
+         </h2>
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+           <button 
+             onClick={() => navigate('/sales')}
+             className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors"
+           >
+             <ShoppingCart className="text-green-600" size={20} />
+             <div className="text-left">
+               <p className="font-medium text-green-900">New Sale</p>
+               <p className="text-sm text-green-700">Create a new sale</p>
+             </div>
+           </button>
+           <button 
+             onClick={() => navigate('/stocking')}
+             className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+           >
+             <Package className="text-blue-600" size={20} />
+             <div className="text-left">
+               <p className="font-medium text-blue-900">Add Stock</p>
+               <p className="text-sm text-blue-700">Add new inventory</p>
+             </div>
+           </button>
+           <button 
+             onClick={() => navigate('/customers')}
+             className="flex items-center gap-3 p-4 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors"
+           >
+             <Users className="text-purple-600" size={20} />
+             <div className="text-left">
+               <p className="font-medium text-purple-900">Manage Customers</p>
+               <p className="text-sm text-purple-700">View customer list</p>
+             </div>
+           </button>
+         </div>
+       </div>
     </div>
   );
 };

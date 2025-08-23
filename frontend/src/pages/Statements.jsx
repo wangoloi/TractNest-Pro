@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, FileText, Download } from 'lucide-react';
 import StockStatement from '../components/statements/StockStatement';
 import SalesStatement from '../components/statements/SalesStatement';
+import Dropdown from '../components/shared/Dropdown';
 import api from '../utils/api';
 
 const Statements = () => {
@@ -88,16 +89,17 @@ const Statements = () => {
           {/* Time Period Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Time Period</label>
-            <select
+            <Dropdown
+              options={[
+                { value: 'this_month', label: 'This Month' },
+                { value: 'last_month', label: 'Last Month' },
+                { value: 'last_3_months', label: 'Last 3 Months' },
+                { value: 'custom', label: 'Custom Range' }
+              ]}
               value={timePeriod}
-              onChange={(e) => setTimePeriod(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md input focus:outline-none focus:ring-0 focus:border-green-500 transition-all"
-            >
-              <option value="this_month">This Month</option>
-              <option value="last_month">Last Month</option>
-              <option value="last_3_months">Last 3 Months</option>
-              <option value="custom">Custom Range</option>
-            </select>
+              onChange={(value) => setTimePeriod(value)}
+              placeholder="Select time period..."
+            />
           </div>
 
           {/* Custom Date Range */}

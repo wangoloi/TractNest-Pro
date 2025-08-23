@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, Filter, Download, MoreHorizontal } from 'lucide-react';
+import Dropdown from './Dropdown';
 
 const DataTable = ({
   data = [],
@@ -286,18 +287,15 @@ const DataTable = ({
             </span>
             <div className="flex items-center gap-2">
               <span>Rows per page:</span>
-              <select
+              <Dropdown
+                options={pageSizeOptions.map(size => ({ value: size, label: size.toString() }))}
                 value={rowsPerPage}
-                onChange={(e) => {
-                  setRowsPerPage(Number(e.target.value));
+                onChange={(value) => {
+                  setRowsPerPage(Number(value));
                   setCurrentPage(1);
                 }}
-                className="border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                {pageSizeOptions.map(size => (
-                  <option key={size} value={size}>{size}</option>
-                ))}
-              </select>
+                size="sm"
+              />
             </div>
           </div>
           
