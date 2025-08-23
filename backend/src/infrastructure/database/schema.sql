@@ -1,7 +1,7 @@
 -- TrackNest Enterprise Multi-Tenant Database Schema
 -- This schema supports multiple organizations with proper isolation
-DROP DATABASE IF EXISTS tracknest;
-CREATE DATABASE tracknest;
+-- DROP DATABASE IF EXISTS tracknest;
+CREATE DATABASE IF NOT EXISTS tracknest;
 USE tracknest;
 -- Organizations (Multi-tenant support)
 CREATE TABLE IF NOT EXISTS organizations (

@@ -1,9 +1,24 @@
 import { Router } from 'express';
-import * as controller from './receipts.controller.js';
+import { authenticateToken, requireOrganization } from '../../middlewares/auth.js';
+import {
+  listReceiptsController,
+  getReceiptByIdController,
+  createReceiptController,
+  updateReceiptController,
+  deleteReceiptController
+} from './controller.js';
 
 export const receiptsRoutes = Router();
 
-receiptsRoutes.get('/', controller.list);
-receiptsRoutes.post('/', controller.create);
+// Apply authentication and organization middleware to all routes
+receiptsRoutes.use(authenticateToken);
+receiptsRoutes.use(requireOrganization);
+
+// Receipt routes
+receiptsRoutes.get('/', listReceiptsController);
+receiptsRoutes.get('/:id', getReceiptByIdController);
+receiptsRoutes.post('/', createReceiptController);
+receiptsRoutes.put('/:id', updateReceiptController);
+receiptsRoutes.delete('/:id', deleteReceiptController);
 
 

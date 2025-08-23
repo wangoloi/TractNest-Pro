@@ -1,48 +1,105 @@
 import { query } from '../../infrastructure/database/mysql.js';
 
-export async function createReceipt({ receiptNo, date, company, contact, total }) {
-  const result = await query(
-    'INSERT INTO receipts (receipt_no, date, company, contact, total) VALUES (?, ?, ?, ?, ?)',
-    [receiptNo, date, company, contact || null, total]
-  );
-  return result.insertId;
+export async function listReceipts(organizationId) {
+  return query(`
+    SELECT 
+      id, receipt_no, supplier_name, supplier_contact, supplier_email, supplier_phone,
+      subtotal, tax_amount, discount_amount, total_amount, notes, status,
+      created_at AS createdAt, updated_at AS updatedAt
+    FROM receipts 
+    WHERE organization_id = ? 
+    ORDER BY created_at DESC
+  `, [organizationId]);
 }
 
-export async function addReceiptItem(receiptId, { name, qty, unitPrice, amount }) {
-  await query(
-    'INSERT INTO receipt_items (receipt_id, name, qty, unit_price, amount) VALUES (?, ?, ?, ?, ?)',
-    [receiptId, name, qty, unitPrice, amount]
-  );
+export async function getReceiptById(id, organizationId) {
+  const rows = await query(`
+    SELECT 
+      id, receipt_no, supplier_name, supplier_contact, supplier_email, supplier_phone,
+      subtotal, tax_amount, discount_amount, total_amount, notes, status,
+      created_at AS createdAt, updated_at AS updatedAt
+    FROM receipts 
+    WHERE id = ? AND organization_id = ?
+  `, [id, organizationId]);
+  
+  if (rows.length === 0) return null;
+  
+  const receipt = rows[0];
+  
+  // Get receipt items
+  const items = await query(`
+    SELECT 
+      id, receipt_id, inventory_item_id, item_name, sku, quantity, 
+      unit_price, cost_price, total_price, notes
+    FROM receipt_items 
+    WHERE receipt_id = ?
+  `, [id]);
+  
+  return { ...receipt, items };
 }
 
-export async function listReceipts() {
-  const receipts = await query('SELECT id, receipt_no AS receiptNo, date, company, contact, total, created_at AS createdAt FROM receipts ORDER BY created_at DESC');
-  const receiptIds = receipts.map(r => r.id);
-  if (receiptIds.length === 0) return [];
-  const items = await query(`SELECT id, receipt_id AS receiptId, name, qty, unit_price AS unitPrice, amount FROM receipt_items WHERE receipt_id IN (${receiptIds.map(()=>'?').join(',')})`, receiptIds);
-  const map = new Map();
-  receipts.forEach(r => map.set(r.id, { ...r, items: [] }));
-  items.forEach(it => { map.get(it.receiptId).items.push({ id: it.id, name: it.name, qty: Number(it.qty), price: Number(it.unitPrice), amount: Number(it.amount) }); });
-  return Array.from(map.values());
+export async function createReceipt(receiptData, organizationId, createdBy) {
+  const {
+    supplier_name, supplier_contact, supplier_email, supplier_phone,
+    subtotal, tax_amount, discount_amount, total_amount, notes, items
+  } = receiptData;
+
+  const result = await query(`
+    INSERT INTO receipts (
+      organization_id, supplier_name, supplier_contact, supplier_email, supplier_phone,
+      subtotal, tax_amount, discount_amount, total_amount, notes, status, created_by
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)
+  `, [organizationId, supplier_name, supplier_contact, supplier_email, supplier_phone, 
+      subtotal, tax_amount, discount_amount, total_amount, notes, createdBy]);
+
+  const receiptId = result.insertId;
+
+  if (items && items.length > 0) {
+    for (const item of items) {
+      await query(`
+        INSERT INTO receipt_items (
+          receipt_id, inventory_item_id, item_name, sku, quantity, 
+          unit_price, cost_price, total_price, notes
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [receiptId, item.inventory_item_id, item.item_name, item.sku, 
+          item.quantity, item.unit_price, item.cost_price, item.total_price, item.notes]);
+
+      // Update inventory quantity if item exists
+      if (item.inventory_item_id) {
+        await query(`
+          UPDATE inventory_items 
+          SET quantity = quantity + ? 
+          WHERE id = ? AND organization_id = ?
+        `, [item.quantity, item.inventory_item_id, organizationId]);
+      }
+    }
+  }
+
+  return getReceiptById(receiptId, organizationId);
 }
 
-export async function findInventoryItemByName(name) {
-  const rows = await query('SELECT id, name, quantity AS qty, unit, price FROM inventory_items WHERE name = ?', [name]);
-  return rows[0] || null;
+export async function updateReceipt(id, receiptData, organizationId) {
+  const {
+    supplier_name, supplier_contact, supplier_email, supplier_phone,
+    subtotal, tax_amount, discount_amount, total_amount, notes, status
+  } = receiptData;
+
+  const result = await query(`
+    UPDATE receipts 
+    SET supplier_name = ?, supplier_contact = ?, supplier_email = ?, supplier_phone = ?,
+        subtotal = ?, tax_amount = ?, discount_amount = ?, total_amount = ?, notes = ?, status = ?
+    WHERE id = ? AND organization_id = ?
+  `, [supplier_name, supplier_contact, supplier_email, supplier_phone,
+      subtotal, tax_amount, discount_amount, total_amount, notes, status, id, organizationId]);
+
+  if (result.affectedRows === 0) return null;
+
+  return getReceiptById(id, organizationId);
 }
 
-export async function insertInventoryItem({ name, qty, unit, price }) {
-  const result = await query('INSERT INTO inventory_items (name, quantity, unit, price) VALUES (?, ?, ?, ?)', [name, qty, unit, price]);
-  return result.insertId;
-}
-
-export async function incrementInventoryQuantity(id, qty, price) {
-  await query('UPDATE inventory_items SET quantity = quantity + ?, price = ? WHERE id = ?', [qty, price, id]);
-}
-
-export async function deleteReceipt(id) {
-  await query('DELETE FROM receipts WHERE id = ?', [id]);
-  return { id };
+export async function deleteReceipt(id, organizationId) {
+  const result = await query('DELETE FROM receipts WHERE id = ? AND organization_id = ?', [id, organizationId]);
+  return result.affectedRows > 0;
 }
 
 

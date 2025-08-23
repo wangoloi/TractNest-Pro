@@ -18,6 +18,9 @@ export function getPool() {
   return pool;
 }
 
+// Export pool directly for convenience
+export { getPool as pool };
+
 export async function query(sql, params = []) {
   const [rows] = await getPool().execute(sql, params);
   return rows;

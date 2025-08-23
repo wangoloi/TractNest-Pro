@@ -1,41 +1,50 @@
 import { z } from 'zod';
-import {
-  createReceipt,
-  addReceiptItem,
-  listReceipts,
-  findInventoryItemByName,
-  insertInventoryItem,
-  incrementInventoryQuantity,
-} from './repository.js';
+import * as repository from './repository.js';
 
-const receiptSchema = z.object({
-  receiptNo: z.string().min(1),
-  date: z.string().min(1),
-  company: z.string().min(1),
-  contact: z.string().optional(),
-  items: z.array(z.object({ name: z.string().min(1), qty: z.number().positive(), price: z.number().nonnegative() })),
+const receiptItemSchema = z.object({
+  inventory_item_id: z.number().optional(),
+  item_name: z.string().min(1, 'Item name is required'),
+  sku: z.string().optional(),
+  quantity: z.number().positive('Quantity must be positive'),
+  unit_price: z.number().min(0, 'Unit price must be non-negative'),
+  cost_price: z.number().min(0, 'Cost price must be non-negative'),
+  total_price: z.number().min(0, 'Total price must be non-negative'),
+  notes: z.string().optional()
 });
 
-export async function listAllReceipts() {
-  return listReceipts();
+const receiptSchema = z.object({
+  supplier_name: z.string().min(1, 'Supplier name is required'),
+  supplier_contact: z.string().optional(),
+  supplier_email: z.string().email().optional(),
+  supplier_phone: z.string().optional(),
+  subtotal: z.number().min(0, 'Subtotal must be non-negative'),
+  tax_amount: z.number().min(0, 'Tax amount must be non-negative'),
+  discount_amount: z.number().min(0, 'Discount amount must be non-negative'),
+  total_amount: z.number().min(0, 'Total amount must be non-negative'),
+  notes: z.string().optional(),
+  items: z.array(receiptItemSchema).min(1, 'At least one item is required')
+});
+
+export async function listReceipts(organizationId) {
+  return repository.listReceipts(organizationId);
 }
 
-export async function createNewReceipt(payload) {
-  const data = receiptSchema.parse(payload);
-  const total = data.items.reduce((sum, it) => sum + it.qty * it.price, 0);
-  const receiptId = await createReceipt({ receiptNo: data.receiptNo, date: data.date, company: data.company, contact: data.contact, total });
-  for (const it of data.items) {
-    const amount = it.qty * it.price;
-    await addReceiptItem(receiptId, { name: it.name, qty: it.qty, unitPrice: it.price, amount });
-    const existing = await findInventoryItemByName(it.name);
-    if (existing) {
-      await incrementInventoryQuantity(existing.id, it.qty, it.price);
-    } else {
-      await insertInventoryItem({ name: it.name, qty: it.qty, unit: 'units', price: it.price });
-    }
-  }
-  const [created] = await listReceipts();
-  return created;
+export async function getReceiptById(id, organizationId) {
+  return repository.getReceiptById(id, organizationId);
+}
+
+export async function createReceipt(receiptData, organizationId, createdBy) {
+  const validatedData = receiptSchema.parse(receiptData);
+  return repository.createReceipt(validatedData, organizationId, createdBy);
+}
+
+export async function updateReceipt(id, receiptData, organizationId) {
+  const validatedData = receiptSchema.partial().parse(receiptData);
+  return repository.updateReceipt(id, validatedData, organizationId);
+}
+
+export async function deleteReceipt(id, organizationId) {
+  return repository.deleteReceipt(id, organizationId);
 }
 
 

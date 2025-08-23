@@ -3,13 +3,10 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/auth';
 import Layout from './components/layout/Layout';
 import Dashboard from './components/dashboard/Dashboard';
-import StockingPlus from './components/stocking/StockingPlus';
-import SalesPlus from './components/sales/SalesPlus';
+import Inventory from './components/inventory/Inventory';
+import Receipts from './components/receipts/Receipts';
 import MySales from './components/sales/MySales';
-import MyStock from './components/stocking/MyStock';
 import Login from './pages/Login';
-import Notifications from './pages/Notifications';
-import Statements from './pages/Statements';
 import './App.css';
 import api from '@utils/api';
 
@@ -31,110 +28,34 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function App() {
-  // State for stock items
-  const [stockItems, setStockItems] = React.useState([]);
-
-  // State for receipts and total stock amount
-  const [receipts, setReceipts] = React.useState([]);
-  const [totalStockAmount, setTotalStockAmount] = React.useState(0);
-
-  // State for sales records and total sales/profits
-  const [salesRecords, setSalesRecords] = React.useState([]);
-  const [totalSales, setTotalSales] = React.useState({
-    amount: 0,
-    profit: 0,
-  });
-
+  // Initialize app data
   useEffect(() => {
-    (async () => {
-      try {
-        const [invRes, recRes, invcRes] = await Promise.all([
-          api.get('/api/inventory'),
-          api.get('/api/receipts'),
-          api.get('/api/invoices'),
-        ]);
-        setStockItems(invRes.data || []);
-        setReceipts(recRes.data || []);
-        setSalesRecords(invcRes.data || []);
-        const grandTotal = (recRes.data || []).reduce((s, r) => s + (r.total || 0), 0);
-        setTotalStockAmount(grandTotal);
-        const totals = (invcRes.data || []).reduce((acc, s) => ({ amount: acc.amount + (s.total || 0), profit: acc.profit + (s.profit || 0) }), { amount: 0, profit: 0 });
-        setTotalSales(totals);
-      } catch (e) {}
-    })();
+    // App initialization logic can go here
   }, []);
-
-  const stockData = stockItems.reduce((acc, item) => {
-    acc[item.name] = item.price;
-    return acc;
-  }, {});
 
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/" element={
         <ProtectedRoute>
-          <Layout stockItems={stockItems} />
+          <Layout />
         </ProtectedRoute>
       }>
         <Route index element={<Dashboard />} />
-        <Route
-          path="stocking"
-          element={
-            <StockingPlus
-              setStockItems={setStockItems}
-              stockItems={stockItems}
-              receipts={receipts}
-              setReceipts={setReceipts}
-              totalStockAmount={totalStockAmount}
-              setTotalStockAmount={setTotalStockAmount}
-            />
-          }
-        />
-        <Route
-          path="sales"
-          element={
-            <SalesPlus
-              salesRecords={salesRecords}
-              setSalesRecords={setSalesRecords}
-              totalSales={totalSales}
-              setTotalSales={setTotalSales}
-              stockData={stockData}
-              stockItems={stockItems}
-              setStockItems={setStockItems}
-            />
-          }
-        />
-        <Route
-          path="my-stock"
-          element={
-            <MyStock
-              stockItems={stockItems}
-              receipts={receipts}
-              totalStockAmount={totalStockAmount}
-              setReceipts={setReceipts}
-            />
-          }
-        />
-        <Route path="my-sales" element={<MySales />} />
-        <Route
-          path="statements"
-          element={
-            <Statements
-              receipts={receipts}
-              salesRecords={salesRecords}
-            />
-          }
-        />
-        <Route
-          path="notifications"
-          element={
-            <Notifications
-              stockItems={stockItems}
-            />
-          }
-        />
-        {/* <Route path="test" element={<Test />} /> */}
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="inventory" element={<Inventory />} />
+        <Route path="receipts" element={<Receipts />} />
+        <Route path="sales" element={<MySales />} />
+        {/* Favorites routes - redirect to dashboard for now */}
+        <Route path="proficar" element={<Dashboard />} />
+        <Route path="armytage" element={<Dashboard />} />
+        <Route path="bullbread" element={<Dashboard />} />
+        <Route path="two-ventory" element={<Dashboard />} />
+        <Route path="winds-ramp" element={<Dashboard />} />
+        <Route path="vintory-board" element={<Dashboard />} />
+        <Route path="xpriory" element={<Dashboard />} />
+        <Route path="star-ramps" element={<Dashboard />} />
+        <Route path="zeep-board" element={<Dashboard />} />
       </Route>
     </Routes>
   );

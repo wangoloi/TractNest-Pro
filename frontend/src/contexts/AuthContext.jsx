@@ -4,6 +4,7 @@ import api from '@utils/api';
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -14,19 +15,23 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (username, password) => {
-    await api.post('/api/auth/login', { username, password }, { withCredentials: true });
+    const response = await api.post('/api/auth/login', { username, password }, { withCredentials: true });
+    const userData = response.data.user;
     localStorage.setItem('isAuthenticated', 'true');
+    setUser(userData);
     setIsAuthenticated(true);
   };
 
   const logout = async () => {
     await api.post('/api/auth/logout', {}, { withCredentials: true });
     localStorage.removeItem('isAuthenticated');
+    setUser(null);
     setIsAuthenticated(false);
   };
 
   const value = {
     isAuthenticated,
+    user,
     login,
     logout,
     loading
