@@ -46,6 +46,13 @@ const Dashboard = () => {
       setLoading(false);
       return;
     }
+    
+    // Only fetch data if user is authenticated
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+    
     fetchDashboardData();
   }, [user]);
 
@@ -63,6 +70,8 @@ const Dashboard = () => {
       const inventory = inventoryRes.data;
       const sales = salesRes.data;
       const receipts = receiptsRes.data;
+
+      console.log(sales, receipts, inventory, "dfdfdfdf");
 
       // Calculate statistics
       const totalSales = sales.reduce((sum, sale) => sum + (sale.totalPrice || 0), 0);

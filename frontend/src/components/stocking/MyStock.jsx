@@ -1,12 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Printer } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { formatNumber } from '../../utils/formatNumber';
 import { normalizeName } from '../../utils/normalizeName';
+import api from '@utils/api';
 
 
-const MyStock = ({ stockItems, receipts, totalStockAmount, setReceipts }) => {
+const MyStock = () => {
+  // Data states
+  const [stockItems, setStockItems] = useState([]);
+  const [receipts, setReceipts] = useState([]);
+  const [totalStockAmount, setTotalStockAmount] = useState(0);
   const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [showStockSummary, setShowStockSummary] = useState(false);
   const [editCompany, setEditCompany] = useState('');
@@ -14,7 +19,34 @@ const MyStock = ({ stockItems, receipts, totalStockAmount, setReceipts }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const receiptsWithId = receipts.map((r, index) => ({
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchInitialData();
+  }, []);
+
+  const fetchInitialData = async () => {
+    try {
+      const [inventoryRes, receiptsRes] = await Promise.all([
+        api.get('/api/inventory'),
+        api.get('/api/receipts')
+      ]);
+      
+      setStockItems(inventoryRes.data || []);
+      setReceipts(receiptsRes.data || []);
+      
+      // Calculate total stock amount
+      const totalAmount = (receiptsRes.data || []).reduce((sum, receipt) => sum + (receipt.total_amount || 0), 0);
+      setTotalStockAmount(totalAmount);
+      
+    } catch (error) {
+      console.error('Error fetching initial data:', error);
+      setStockItems([]);
+      setReceipts([]);
+      setTotalStockAmount(0);
+    }
+  };
+
+  const receiptsWithId = (receipts || []).map((r, index) => ({
     ...r,
     id: r.id || `receipt-${index}-${r.date}`,
   }));
