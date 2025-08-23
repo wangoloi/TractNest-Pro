@@ -204,7 +204,7 @@ SHOW TABLES;
 
 DESC users;
 
-SELECT * FROM inventory_items;
+SELECT * FROM sales_transactions;
 
 
 

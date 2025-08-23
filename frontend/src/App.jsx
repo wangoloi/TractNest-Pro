@@ -14,28 +14,36 @@ import api from './utils/api';
 
 // Context
 import { AuthProvider } from './contexts/AuthContext';
+import { useAuth } from './contexts/useAuth';
 
 
 
 function AppContent() {
   const [stockItems, setStockItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+
     console.log('🔄 Fetching application data...');
     const fetchData = async () => {
       try {
         const inventoryRes = await api.get('/api/inventory');
-        setStockItems(inventoryRes.data);
+        setStockItems(inventoryRes.data || []);
       } catch (error) {
         console.error('Error fetching data:', error);
+        setStockItems([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [isAuthenticated]);
 
   if (loading) {
     return (

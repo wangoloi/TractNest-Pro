@@ -1,18 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, FileText, Download } from 'lucide-react';
 import StockStatement from '../components/statements/StockStatement';
 import SalesStatement from '../components/statements/SalesStatement';
+import api from '../utils/api';
 
-const Statements = ({ receipts, salesRecords }) => {
+const Statements = () => {
+  const [receipts, setReceipts] = useState([]);
+  const [salesRecords, setSalesRecords] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [reportType, setReportType] = useState('stock');
   const [timePeriod, setTimePeriod] = useState('this_month');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [receiptsRes, salesRes] = await Promise.all([
+          api.get('/api/receipts'),
+          api.get('/api/sales')
+        ]);
+        
+        setReceipts(receiptsRes.data || []);
+        setSalesRecords(salesRes.data || []);
+      } catch (error) {
+        console.error('Error fetching statement data:', error);
+        setReceipts([]);
+        setSalesRecords([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   const handlePrint = () => {
     // This will be handled by the individual statement components
     // We'll pass the date range to the appropriate component
   };
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+          <span className="ml-3 text-gray-600">Loading statements...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">

@@ -56,9 +56,9 @@ const Layout = ({ stockItems }) => {
 
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Sidebar */}
-      <div className={`bg-white shadow-md transition-all duration-300 ${isSidebarCollapsed ? 'w-20' : 'w-64'}`}>
+      <div className={`bg-white shadow-md transition-all duration-300 flex-shrink-0 ${isSidebarCollapsed ? 'w-20' : 'w-64'}`}>
         <div className="p-4 border-b flex items-center justify-between">
           {!isSidebarCollapsed && (
             <h1 className="text-xl font-bold text-green-700">TrackNest Pro</h1>

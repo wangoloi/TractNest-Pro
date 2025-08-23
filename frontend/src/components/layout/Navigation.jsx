@@ -10,7 +10,6 @@ import {
   Settings,
   BarChart3,
   Users,
-  Zap,
   MessageSquare,
   UserPlus,
   Contact
@@ -128,24 +127,6 @@ const Navigation = ({ activeTab, onTabChange, isCollapsed = false, stockItems = 
     <nav className="flex flex-col h-full">
       {/* Scrollable Navigation Items */}
       <div className="flex-1 p-4 space-y-2 overflow-y-auto">
-        {/* User Profile Section */}
-        {!isCollapsed && (
-          <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border border-green-200">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center">
-                <Users size={20} className="text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">
-                  {user?.first_name ? `${user.first_name} ${user.last_name}` : user?.username || 'Admin User'}
-                </p>
-                <p className="text-xs text-gray-600 truncate">{user?.email || 'admin@tracknest.com'}</p>
-                <p className="text-xs text-green-600 font-medium capitalize">{user?.role || 'admin'}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Navigation Items */}
         <ul className="space-y-1">
           {menuItems.map((item) => {
@@ -156,10 +137,10 @@ const Navigation = ({ activeTab, onTabChange, isCollapsed = false, stockItems = 
               onTabChange(item.name);
             };
 
-            // Count low stock items for notifications
-            const lowStockCount = item.id === 'notifications' 
-              ? stockItems.filter(item => item.qty < 5).length 
-              : 0;
+                         // Count low stock items for notifications
+             const lowStockCount = item.id === 'notifications' 
+               ? (stockItems || []).filter(item => (item.qty || item.quantity || 0) < 5).length 
+               : 0;
             
             const buttonContent = (
               <button
@@ -211,33 +192,30 @@ const Navigation = ({ activeTab, onTabChange, isCollapsed = false, stockItems = 
           })}
         </ul>
 
-        {/* Quick Actions */}
+
+      </div>
+
+      {/* User Info and Logout Section - Fixed at Bottom */}
+      <div className="p-4 border-t border-gray-200 space-y-3">
+        {/* User Profile Section */}
         {!isCollapsed && (
-          <div className="mt-8 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200">
-            <h3 className="text-sm font-semibold text-purple-900 mb-3 flex items-center gap-2">
-              <Zap size={16} />
-              Quick Actions
-            </h3>
-            <div className="space-y-2">
-              <button 
-                onClick={() => onTabChange('SalesPlus')}
-                className="w-full text-left p-2 rounded-lg bg-white/50 hover:bg-white transition-colors text-sm text-purple-800"
-              >
-                + New Invoice
-              </button>
-              <button 
-                onClick={() => onTabChange('StockingPlus')}
-                className="w-full text-left p-2 rounded-lg bg-white/50 hover:bg-white transition-colors text-sm text-purple-800"
-              >
-                + Add Stock
-              </button>
+          <div className="p-3 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border border-green-200">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center">
+                <Users size={16} className="text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-900 truncate">
+                  {user?.first_name ? `${user.first_name} ${user.last_name}` : user?.username || 'Admin User'}
+                </p>
+                <p className="text-xs text-gray-600 truncate">{user?.email || 'admin@tracknest.com'}</p>
+                <p className="text-xs text-green-600 font-medium capitalize">{user?.role || 'owner'}</p>
+              </div>
             </div>
           </div>
         )}
-      </div>
 
-      {/* Logout Section - Fixed at Bottom */}
-      <div className="p-4 border-t border-gray-200">
+        {/* Logout Button */}
         <Tooltip content="Logout" position="right" delay={0}>
           <button
             className={`group w-full flex items-center rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 text-red-600 hover:bg-red-50 hover:text-red-700 ${

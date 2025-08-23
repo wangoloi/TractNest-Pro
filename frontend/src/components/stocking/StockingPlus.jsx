@@ -7,14 +7,11 @@ import { formatNumber } from '../../utils/formatNumber';
 import api from '@utils/api';
 import { toast } from 'react-toastify';
 
-const StockingPlus = ({
-  stockItems,
-  setStockItems,
-
-  setReceipts,
-  totalStockAmount,
-  setTotalStockAmount,
-}) => {
+const StockingPlus = () => {
+  // Data states
+  const [stockItems, setStockItems] = useState([]);
+  const [receipts, setReceipts] = useState([]);
+  const [totalStockAmount, setTotalStockAmount] = useState(0);
 
   // Receipt info states
   const [receiptNumber, setReceiptNumber] = useState('');
@@ -40,13 +37,37 @@ const StockingPlus = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
-  // Generate receipt number on component mount
+  // Generate receipt number and fetch data on component mount
   useEffect(() => {
     // Get the last receipt number from localStorage or set default
     const lastReceiptNumber = localStorage.getItem('lastReceiptNumber') || '000';
     const nextNumber = String(parseInt(lastReceiptNumber) + 1).padStart(3, '0');
     setReceiptNumber(`REC-${nextNumber}`);
+    
+    fetchInitialData();
   }, []);
+
+  const fetchInitialData = async () => {
+    try {
+      const [inventoryRes, receiptsRes] = await Promise.all([
+        api.get('/api/inventory'),
+        api.get('/api/receipts')
+      ]);
+      
+      setStockItems(inventoryRes.data || []);
+      setReceipts(receiptsRes.data || []);
+      
+      // Calculate total stock amount
+      const totalAmount = (receiptsRes.data || []).reduce((sum, receipt) => sum + (receipt.total_amount || 0), 0);
+      setTotalStockAmount(totalAmount);
+      
+    } catch (error) {
+      console.error('Error fetching initial data:', error);
+      setStockItems([]);
+      setReceipts([]);
+      setTotalStockAmount(0);
+    }
+  };
 
   const handleAddItem = () => {
     if (!itemName.trim()) {
@@ -291,7 +312,7 @@ const StockingPlus = ({
   };
 
   // Filter items based on search term
-  const filteredItems = stockItems.filter(item => 
+  const filteredItems = (stockItems || []).filter(item => 
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 

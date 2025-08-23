@@ -69,14 +69,14 @@ const Dashboard = () => {
       const totalProfit = sales.reduce((sum, sale) => sum + (sale.profit || 0), 0);
       const totalInvoices = sales.length;
       const totalItems = inventory.length;
-      const lowStockItems = inventory.filter(item => (item.quantity || item.qty || 0) <= (item.reorder_level || 10)).length;
+      const lowStockItems = (inventory || []).filter(item => (item.quantity || item.qty || 0) <= (item.reorder_level || 10)).length;
       const pendingInvoices = 0; // Sales don't have payment status
       const profitMargin = totalSales > 0 ? (totalProfit / totalSales) * 100 : 0;
 
       // Calculate monthly growth (simplified)
       const currentMonth = new Date().getMonth();
-      const currentMonthSales = sales.filter(sale => new Date(sale.createdAt).getMonth() === currentMonth);
-      const lastMonthSales = sales.filter(sale => new Date(sale.createdAt).getMonth() === currentMonth - 1);
+        const currentMonthSales = (sales || []).filter(sale => new Date(sale.createdAt).getMonth() === currentMonth);
+  const lastMonthSales = (sales || []).filter(sale => new Date(sale.createdAt).getMonth() === currentMonth - 1);
       
       const currentMonthTotal = currentMonthSales.reduce((sum, sale) => sum + (sale.totalPrice || 0), 0);
       const lastMonthTotal = lastMonthSales.reduce((sum, sale) => sum + (sale.totalPrice || 0), 0);

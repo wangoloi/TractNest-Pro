@@ -22,16 +22,11 @@ import { formatNumber } from '../../utils/formatNumber';
 
 import api from '@utils/api';
 
-const SalesPlus = ({
-  salesRecords,
-  setSalesRecords,
-  totalSales,
-  setTotalSales,
-
-  stockItems,
-  setStockItems,
-  refreshData,
-}) => {
+const SalesPlus = () => {
+  // Data states
+  const [salesRecords, setSalesRecords] = useState([]);
+  const [totalSales, setTotalSales] = useState({ amount: 0, profit: 0 });
+  const [stockItems, setStockItems] = useState([]);
   // Sale info states
   const [saleDate, setSaleDate] = useState(new Date().toISOString().split('T')[0]);
   const [customerName, setCustomerName] = useState('');
@@ -69,11 +64,52 @@ const SalesPlus = ({
 
   const searchRef = useRef(null);
 
-  // Generate invoice number on component mount
+  const generateInvoiceNumber = () => {
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 1000);
+    setInvoiceNumber(`INV-${timestamp}-${random}`);
+  };
+
+  const fetchAvailableInventory = useCallback(async () => {
+    try {
+      // Use the main inventory data that's already being managed by the parent
+      // This ensures consistency with the stocking system
+      console.log('Fetching available inventory from stockItems:', stockItems);
+      setAvailableInventory(stockItems || []);
+    } catch (error) {
+      console.error('Failed to fetch available inventory:', error);
+      setAvailableInventory([]);
+    }
+  }, [stockItems]);
+
+  // Fetch initial data on component mount
   useEffect(() => {
     generateInvoiceNumber();
-    fetchAvailableInventory();
-  }, [fetchAvailableInventory]);
+    fetchInitialData();
+  }, []);
+
+  const fetchInitialData = async () => {
+    try {
+      const [salesRes, inventoryRes] = await Promise.all([
+        api.get('/api/sales'),
+        api.get('/api/inventory')
+      ]);
+      
+      setSalesRecords(salesRes.data || []);
+      setStockItems(inventoryRes.data || []);
+      
+      // Calculate total sales
+      const totalAmount = (salesRes.data || []).reduce((sum, sale) => sum + (sale.totalPrice || 0), 0);
+      const totalProfit = (salesRes.data || []).reduce((sum, sale) => sum + (sale.profit || 0), 0);
+      setTotalSales({ amount: totalAmount, profit: totalProfit });
+      
+    } catch (error) {
+      console.error('Error fetching initial data:', error);
+      setSalesRecords([]);
+      setStockItems([]);
+      setTotalSales({ amount: 0, profit: 0 });
+    }
+  };
 
   // Refresh available inventory when stockItems changes
   useEffect(() => {
@@ -93,37 +129,13 @@ const SalesPlus = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const generateInvoiceNumber = () => {
-    const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 1000);
-    setInvoiceNumber(`INV-${timestamp}-${random}`);
-  };
-
-  const fetchAvailableInventory = useCallback(async () => {
-    try {
-      // Use the main inventory data that's already being managed by the parent
-      // This ensures consistency with the stocking system
-      console.log('Fetching available inventory from stockItems:', stockItems);
-      setAvailableInventory(stockItems || []);
-    } catch (error) {
-      console.error('Failed to fetch available inventory:', error);
-      setAvailableInventory([]);
-    }
-  }, [stockItems]);
-
   const refreshInventory = async () => {
     setIsRefreshing(true);
     try {
-      if (refreshData) {
-        await refreshData();
-        toast.success('Inventory refreshed successfully!');
-      } else {
-        // Fallback to direct API call if refreshData is not available
-        const invRes = await api.get('/api/inventory');
-        setStockItems(invRes.data || []);
-        setAvailableInventory(invRes.data || []);
-        toast.success('Inventory refreshed successfully!');
-      }
+      const invRes = await api.get('/api/inventory');
+      setStockItems(invRes.data || []);
+      setAvailableInventory(invRes.data || []);
+      toast.success('Inventory refreshed successfully!');
     } catch (error) {
       console.error('Failed to refresh inventory:', error);
       toast.error('Failed to refresh inventory');

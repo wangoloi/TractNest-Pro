@@ -3,7 +3,7 @@ import { AlertTriangle } from 'lucide-react';
 
 const Notifications = ({ stockItems }) => {
   // Filter items with quantity less than 5
-  const lowStockItems = stockItems.filter(item => (item.qty || item.quantity || 0) < 5);
+  const lowStockItems = (stockItems || []).filter(item => (item.qty || item.quantity || 0) < 5);
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
