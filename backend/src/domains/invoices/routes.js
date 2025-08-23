@@ -8,7 +8,7 @@ export const invoicesRoutes = Router();
 invoicesRoutes.use(authenticateToken);
 invoicesRoutes.use(requireOrganization);
 
-invoicesRoutes.get('/', controller.list);
-invoicesRoutes.post('/', controller.create);
+invoicesRoutes.get('/', controller.listInvoicesController);
+invoicesRoutes.post('/', controller.createInvoiceController);
 
 

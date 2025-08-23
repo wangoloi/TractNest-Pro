@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Lock, User, Eye, EyeOff, Info, CheckCircle, Wifi, UserPlus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Lock, User, Eye, EyeOff, Info, CheckCircle, Wifi } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
 import api from '@utils/api';
@@ -90,6 +90,9 @@ const Login = () => {
               >
                 {showCredentials ? 'Hide' : 'Show'} Credentials
               </button>
+            </div>
+            <div className="mt-2 text-xs text-blue-700">
+              <p>💡 <strong>Note:</strong> New accounts can only be created by administrators.</p>
             </div>
             {showCredentials && (
               <div className="mt-3 space-y-3">
@@ -223,48 +226,7 @@ const Login = () => {
             </button>
           </form>
 
-          {/* Account Type Selection */}
-          <div className="mt-6 space-y-4">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Account Types</span>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <Link
-                to="/register/customer"
-                className="flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all duration-200 group"
-              >
-                <UserPlus className="text-gray-600 group-hover:text-green-600" size={20} />
-                <span className="text-sm font-medium text-gray-700 group-hover:text-green-700">
-                  Customer Account
-                </span>
-              </Link>
-              
-              <button
-                onClick={() => toast.info('Admin accounts are created by system administrators. Please contact your admin for access.')}
-                className="flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all duration-200 group"
-              >
-                <Lock className="text-gray-600 group-hover:text-blue-600" size={20} />
-                <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700">
-                  Admin Account
-                </span>
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Don't have an account?{' '}
-              <Link to="/register/customer" className="font-medium text-green-600 hover:text-green-500 transition-colors">
-                Register as Customer
-              </Link>
-            </p>
-          </div>
 
           {/* Connection Test */}
           <div className="mt-4 text-center">

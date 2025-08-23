@@ -9,7 +9,6 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Auth Components
 import Login from './pages/Login';
-import CustomerRegistration from './components/auth/CustomerRegistration';
 
 // Main Components
 import Dashboard from './components/dashboard/Dashboard';
@@ -29,10 +28,10 @@ import AppSettings from './components/settings/AppSettings';
 // Admin Components
 import AdminDashboard from './components/admin/AdminDashboard';
 import UserManagement from './components/admin/UserManagement';
+import AddCustomer from './components/admin/AddCustomer';
 
 // Context
-import { AuthProvider } from './contexts/AuthContext';
-import { useAuth } from './contexts/useAuth';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 // Protected route component
 const ProtectedRoute = ({ children }) => {
@@ -100,33 +99,38 @@ const CustomerProtectedRoute = ({ children }) => {
 };
 
 function AppContent() {
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [stockItems, setStockItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('🔄 Fetching application data...');
-    const fetchData = async () => {
-      try {
-        const [, inventoryRes] = await Promise.all([
-          fetch('http://localhost:4000/api/customers').catch(() => ({ ok: false })),
-          fetch('http://localhost:4000/api/inventory').catch(() => ({ ok: false })),
-          fetch('http://localhost:4000/api/receipts').catch(() => ({ ok: false })),
-          fetch('http://localhost:4000/api/sales').catch(() => ({ ok: false }))
-        ]);
+    if (!authLoading && isAuthenticated) {
+      console.log('🔄 Fetching application data...');
+      const fetchData = async () => {
+        try {
+          const [, inventoryRes] = await Promise.all([
+            fetch('http://localhost:4000/api/customers').catch(() => ({ ok: false })),
+            fetch('http://localhost:4000/api/inventory').catch(() => ({ ok: false })),
+            fetch('http://localhost:4000/api/receipts').catch(() => ({ ok: false })),
+            fetch('http://localhost:4000/api/sales').catch(() => ({ ok: false }))
+          ]);
 
-        if (inventoryRes.ok) {
-          const inventoryData = await inventoryRes.json();
-          setStockItems(inventoryData);
+          if (inventoryRes.ok) {
+            const inventoryData = await inventoryRes.json();
+            setStockItems(inventoryData);
+          }
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        } finally {
+          setLoading(false);
         }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+      };
 
-    fetchData();
-  }, []);
+      fetchData();
+    } else if (!authLoading && !isAuthenticated) {
+      setLoading(false);
+    }
+  }, [isAuthenticated, authLoading]);
 
   const refreshData = () => {
     setLoading(true);
@@ -142,7 +146,7 @@ function AppContent() {
       });
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600"></div>
@@ -156,7 +160,6 @@ function AppContent() {
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
-          <Route path="/register/customer" element={<CustomerRegistration />} />
           
           {/* Protected Routes */}
           <Route path="/" element={
@@ -201,6 +204,11 @@ function AppContent() {
             <Route path="admin/users" element={
               <AdminProtectedRoute>
                 <UserManagement />
+              </AdminProtectedRoute>
+            } />
+            <Route path="admin/add-customer" element={
+              <AdminProtectedRoute>
+                <AddCustomer />
               </AdminProtectedRoute>
             } />
           </Route>

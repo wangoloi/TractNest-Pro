@@ -1,6 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import api from '@utils/api';
 import { AuthContext } from './AuthContextDef';
+
+// Custom hook to use the auth context
+const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
 const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -69,4 +78,4 @@ const AuthProvider = ({ children }) => {
   );
 };
 
-export { AuthProvider };
+export { AuthProvider, useAuth };

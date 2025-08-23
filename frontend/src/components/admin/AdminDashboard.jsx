@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Settings, 
   Users, 
@@ -14,11 +15,13 @@ import {
   Package,
   MessageSquare,
   FileText,
-  Zap
+  Zap,
+  UserPlus
 } from 'lucide-react';
 import api from '@utils/api';
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({});
   const [recentActivity, setRecentActivity] = useState([]);
   const [systemHealth, setSystemHealth] = useState({});
@@ -106,6 +109,9 @@ const AdminDashboard = () => {
           <div>
             <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
             <p className="text-gray-600 mt-1">System overview and management</p>
+            <p className="text-sm text-blue-600 mt-2">
+              💼 <strong>Customer Management:</strong> Use the "Add Customer" and "Customer Management" buttons below to create and manage customer accounts.
+            </p>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -224,28 +230,40 @@ const AdminDashboard = () => {
       <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <button className="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-left">
+          <button 
+            onClick={() => navigate('/admin/users')}
+            className="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-left"
+          >
             <Users size={24} className="text-blue-600 mb-2" />
             <p className="font-medium text-gray-800">Manage Users</p>
             <p className="text-sm text-gray-600">Add, edit, or remove users</p>
           </button>
           
-          <button className="p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors text-left">
+          <button 
+            onClick={() => navigate('/customers')}
+            className="p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors text-left"
+          >
             <Users size={24} className="text-green-600 mb-2" />
             <p className="font-medium text-gray-800">Customer Management</p>
             <p className="text-sm text-gray-600">View and manage customers</p>
           </button>
           
-          <button className="p-4 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors text-left">
+          <button 
+            onClick={() => navigate('/admin/add-customer')}
+            className="p-4 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors text-left"
+          >
+            <UserPlus size={24} className="text-indigo-600 mb-2" />
+            <p className="font-medium text-gray-800">Add Customer</p>
+            <p className="text-sm text-gray-600">Create new customer account</p>
+          </button>
+          
+          <button 
+            onClick={() => navigate('/settings')}
+            className="p-4 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors text-left"
+          >
             <Settings size={24} className="text-orange-600 mb-2" />
             <p className="font-medium text-gray-800">System Settings</p>
             <p className="text-sm text-gray-600">Configure application settings</p>
-          </button>
-          
-          <button className="p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-left">
-            <Database size={24} className="text-purple-600 mb-2" />
-            <p className="font-medium text-gray-800">Database Backup</p>
-            <p className="text-sm text-gray-600">Create system backup</p>
           </button>
         </div>
       </div>
