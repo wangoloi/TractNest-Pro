@@ -10,8 +10,6 @@ import Login from './pages/Login';
 import './App.css';
 import api from '@utils/api';
 
-
-
 // Protected route component
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
