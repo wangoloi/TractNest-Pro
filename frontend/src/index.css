@@ -1,1 +1,49 @@
 @import "tailwindcss";
+
+/* Global input focus styles */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none !important;
+  border-color: #10b981 !important; /* green-500 */
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+}
+
+/* Remove default browser focus styles */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none !important;
+}
+
+/* Ensure consistent button focus styles */
+button:focus {
+  outline: none !important;
+}
+
+/* Remove any default browser styling */
+* {
+  box-sizing: border-box;
+}
+
+/* Ensure form elements have consistent styling */
+input,
+textarea,
+select {
+  border-radius: 0.5rem;
+  border: 1px solid #d1d5db;
+  transition: all 0.2s ease-in-out;
+}
+
+input:hover,
+textarea:hover,
+select:hover {
+  border-color: #9ca3af;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}

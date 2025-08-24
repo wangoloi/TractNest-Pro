@@ -197,4 +197,18 @@ CREATE INDEX idx_invoices_organization ON invoices(organization_id);
 CREATE INDEX idx_app_settings_organization ON app_settings(organization_id);
 
 
+use tracknest;
+
+
+SHOW TABLES;
+
+DESC users;
+
+SELECT * FROM inventory_items;
+
+
+
+
+
+
 

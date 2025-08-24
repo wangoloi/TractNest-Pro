@@ -32,6 +32,7 @@ const AuthProvider = ({ children }) => {
       setLoading(true);
       const response = await api.post('/api/auth/login', { username, password }, { withCredentials: true });
       localStorage.setItem('isAuthenticated', 'true');
+      console.log(response.data.user, 'response.data.user');
       localStorage.setItem('userData', JSON.stringify(response.data.user));
       setIsAuthenticated(true);
       setUser(response.data.user);

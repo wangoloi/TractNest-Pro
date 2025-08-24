@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Navigation from './Navigation';
-import { Menu, X, RefreshCw } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 
-const Layout = ({ stockItems, refreshData }) => {
+const Layout = ({ stockItems }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -64,15 +64,6 @@ const Layout = ({ stockItems, refreshData }) => {
             <h1 className="text-xl font-bold text-green-700">TrackNest Pro</h1>
           )}
           <div className="flex items-center gap-2">
-            {refreshData && (
-              <button
-                onClick={refreshData}
-                className="p-2 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                title="Refresh Data"
-              >
-                <RefreshCw className="text-gray-600" size={20} />
-              </button>
-            )}
             <button
               onClick={toggleSidebar}
               className="p-2 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"

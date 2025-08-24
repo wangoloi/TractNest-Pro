@@ -37,26 +37,26 @@ api.interceptors.response.use(
     
     switch (status) {
       case 401:
-        message = 'Authentication failed. Please login again.';
+        message = error?.response?.data?.message || 'Authentication failed. Please login again.';
         // Clear authentication state
         localStorage.removeItem('isAuthenticated');
         console.error('🔐 Authentication error:', error.response.data);
         break;
       case 403:
-        message = 'Access denied. You don\'t have permission to perform this action.';
+        message = error?.response?.data?.message || 'Access denied. You don\'t have permission to perform this action.';
         break;
       case 404:
-        message = 'Resource not found.';
+        message = error?.response?.data?.message || 'Resource not found.';
         break;
       case 500:
-        message = 'Server error. Please try again later.';
+        message = error?.response?.data?.message || 'Server error. Please try again later.';
         console.error('🚨 Server error:', error.response.data);
         break;
       default:
         if (status >= 500) {
-          message = 'Server error. Please try again later.';
+          message = error?.response?.data?.message || 'Server error. Please try again later.';
         } else if (status >= 400) {
-          message = 'Request failed. Please check your input.';
+          message = error?.response?.data?.message || 'Request failed. Please check your input.';
         }
     }
     

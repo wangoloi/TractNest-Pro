@@ -265,7 +265,7 @@ async function createTables() {
   for (const tableSQL of tables) {
     try {
       await pool.execute(tableSQL);
-      console.log('✅ Table created successfully');
+      // console.log('✅ Table created successfully');
     } catch (error) {
       if (error.code === 'ER_TABLE_EXISTS_ERROR') {
         console.log('⚠️  Table already exists, skipping...');

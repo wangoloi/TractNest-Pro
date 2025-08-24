@@ -15,7 +15,8 @@ import {
   UserPlus,
   Contact
 } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/useAuth';
+import Tooltip from '../shared/Tooltip';
 
 const Navigation = ({ activeTab, onTabChange, isCollapsed = false, stockItems = [] }) => {
   const { logout, user } = useAuth();
@@ -29,44 +30,37 @@ const Navigation = ({ activeTab, onTabChange, isCollapsed = false, stockItems = 
     { 
       id: 'dashboard', 
       name: 'Dashboard', 
-      icon: Home,
-      description: 'Overview & Analytics'
+      icon: Home
     },
     { 
       id: 'stocking', 
       name: 'StockingPlus', 
-      icon: Package,
-      description: 'Inventory Management'
+      icon: Package
     },
     { 
       id: 'sales', 
       name: 'SalesPlus', 
-      icon: ShoppingCart,
-      description: 'Sales & Invoicing'
+      icon: ShoppingCart
     },
     { 
       id: 'my-sales', 
       name: 'MySales', 
-      icon: BarChart3,
-      description: 'Sales Reports'
+      icon: BarChart3
     },
     { 
       id: 'my-stock', 
       name: 'MyStock', 
-      icon: Archive,
-      description: 'Stock Reports'
+      icon: Archive
     },
     { 
       id: 'statements', 
       name: 'Statements', 
-      icon: FileText,
-      description: 'Financial Reports'
+      icon: FileText
     },
     { 
       id: 'notifications', 
       name: 'Notifications', 
-      icon: Bell,
-      description: 'Alerts & Updates'
+      icon: Bell
     }
   ];
 
@@ -75,46 +69,32 @@ const Navigation = ({ activeTab, onTabChange, isCollapsed = false, stockItems = 
     { 
       id: 'contact', 
       name: 'Contact', 
-      icon: Contact,
-      description: 'Contact Customers'
-    },
-    { 
-      id: 'admin', 
-      name: 'Admin Dashboard', 
-      icon: Settings,
-      description: 'System Administration'
+      icon: Contact
     },
     { 
       id: 'customers', 
       name: 'Customers', 
-      icon: UserPlus,
-      description: 'Customer Management'
+      icon: UserPlus
     },
     { 
       id: 'messages', 
       name: 'Messages', 
-      icon: MessageSquare,
-      description: 'Customer Messages'
+      icon: MessageSquare
     },
     { 
       id: 'settings', 
       name: 'Settings', 
-      icon: Settings,
-      description: 'App Configuration'
+      icon: Settings
     }
   ];
 
   // Combine menu items based on user role
   const menuItems = [
     ...baseMenuItems,
-    ...(isAdmin ? adminMenuItems : []),
-    { 
-      id: 'logout', 
-      name: 'Logout', 
-      icon: LogOut,
-      description: 'Sign out'
-    }
+    ...(isAdmin ? adminMenuItems : [])
   ];
+
+
 
   const getDisplayName = (itemName) => {
     switch (itemName) {
@@ -145,53 +125,47 @@ const Navigation = ({ activeTab, onTabChange, isCollapsed = false, stockItems = 
   };
 
   return (
-    <nav className="p-4 space-y-2">
-      {/* User Profile Section */}
-      {!isCollapsed && (
-        <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border border-green-200">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center">
-              <Users size={20} className="text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-900 truncate">
-                {user?.first_name ? `${user.first_name} ${user.last_name}` : user?.username || 'Admin User'}
-              </p>
-              <p className="text-xs text-gray-600 truncate">{user?.email || 'admin@tracknest.com'}</p>
-              <p className="text-xs text-green-600 font-medium capitalize">{user?.role || 'admin'}</p>
+    <nav className="flex flex-col h-full">
+      {/* Scrollable Navigation Items */}
+      <div className="flex-1 p-4 space-y-2 overflow-y-auto">
+        {/* User Profile Section */}
+        {!isCollapsed && (
+          <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border border-green-200">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center">
+                <Users size={20} className="text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-900 truncate">
+                  {user?.first_name ? `${user.first_name} ${user.last_name}` : user?.username || 'Admin User'}
+                </p>
+                <p className="text-xs text-gray-600 truncate">{user?.email || 'admin@tracknest.com'}</p>
+                <p className="text-xs text-green-600 font-medium capitalize">{user?.role || 'admin'}</p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Navigation Items */}
-      <ul className="space-y-1">
-        {menuItems.map((item) => {
-          const IconComponent = item.icon;
-          const isActive = activeTab === item.name;
-          const isLogout = item.id === 'logout';
-          
-          const handleClick = () => {
-            if (isLogout) {
-              handleLogout();
-            } else {
+        {/* Navigation Items */}
+        <ul className="space-y-1">
+          {menuItems.map((item) => {
+            const IconComponent = item.icon;
+            const isActive = activeTab === item.name;
+            
+            const handleClick = () => {
               onTabChange(item.name);
-            }
-          };
+            };
 
-          // Count low stock items for notifications
-          const lowStockCount = item.id === 'notifications' 
-            ? stockItems.filter(item => item.qty < 5).length 
-            : 0;
-          
-          return (
-            <li key={item.id}>
+            // Count low stock items for notifications
+            const lowStockCount = item.id === 'notifications' 
+              ? stockItems.filter(item => item.qty < 5).length 
+              : 0;
+            
+            const buttonContent = (
               <button
                 className={`group w-full flex items-center rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
                   isActive
                     ? 'bg-gradient-to-r from-green-600 to-blue-600 text-white font-medium shadow-lg transform scale-[1.02]'
-                    : isLogout
-                    ? 'text-red-600 hover:bg-red-50 hover:text-red-700'
                     : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50 hover:text-gray-900'
                 } ${isCollapsed ? 'justify-center p-3' : 'p-3'}`}
                 onClick={handleClick}
@@ -200,7 +174,7 @@ const Navigation = ({ activeTab, onTabChange, isCollapsed = false, stockItems = 
                   <IconComponent 
                     size={20} 
                     className={`transition-transform duration-200 group-hover:scale-110 ${
-                      isActive ? 'text-white' : isLogout ? 'text-red-600' : 'text-gray-600'
+                      isActive ? 'text-white' : 'text-gray-600'
                     }`} 
                   />
                   {lowStockCount > 0 && item.id === 'notifications' && (
@@ -213,11 +187,6 @@ const Navigation = ({ activeTab, onTabChange, isCollapsed = false, stockItems = 
                 {!isCollapsed && (
                   <div className="ml-3 text-left flex-1">
                     <span className="block">{getDisplayName(item.name)}</span>
-                    <span className={`text-xs ${
-                      isActive ? 'text-green-100' : 'text-gray-500'
-                    }`}>
-                      {item.description}
-                    </span>
                   </div>
                 )}
 
@@ -226,34 +195,66 @@ const Navigation = ({ activeTab, onTabChange, isCollapsed = false, stockItems = 
                   <div className="w-2 h-2 bg-white rounded-full ml-2 animate-pulse"></div>
                 )}
               </button>
-            </li>
-          );
-        })}
-      </ul>
+            );
 
-      {/* Quick Actions */}
-      {!isCollapsed && (
-        <div className="mt-8 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200">
-          <h3 className="text-sm font-semibold text-purple-900 mb-3 flex items-center gap-2">
-            <Zap size={16} />
-            Quick Actions
-          </h3>
-          <div className="space-y-2">
-            <button 
-              onClick={() => onTabChange('SalesPlus')}
-              className="w-full text-left p-2 rounded-lg bg-white/50 hover:bg-white transition-colors text-sm text-purple-800"
-            >
-              + New Invoice
-            </button>
-            <button 
-              onClick={() => onTabChange('StockingPlus')}
-              className="w-full text-left p-2 rounded-lg bg-white/50 hover:bg-white transition-colors text-sm text-purple-800"
-            >
-              + Add Stock
-            </button>
+            return (
+              <li key={item.id}>
+                {isCollapsed ? (
+                  <Tooltip content={getDisplayName(item.name)} position="right">
+                    {buttonContent}
+                  </Tooltip>
+                ) : (
+                  buttonContent
+                )}
+              </li>
+            );
+          })}
+        </ul>
+
+        {/* Quick Actions */}
+        {!isCollapsed && (
+          <div className="mt-8 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200">
+            <h3 className="text-sm font-semibold text-purple-900 mb-3 flex items-center gap-2">
+              <Zap size={16} />
+              Quick Actions
+            </h3>
+            <div className="space-y-2">
+              <button 
+                onClick={() => onTabChange('SalesPlus')}
+                className="w-full text-left p-2 rounded-lg bg-white/50 hover:bg-white transition-colors text-sm text-purple-800"
+              >
+                + New Invoice
+              </button>
+              <button 
+                onClick={() => onTabChange('StockingPlus')}
+                className="w-full text-left p-2 rounded-lg bg-white/50 hover:bg-white transition-colors text-sm text-purple-800"
+              >
+                + Add Stock
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+
+      {/* Logout Section - Fixed at Bottom */}
+      <div className="p-4 border-t border-gray-200">
+        <Tooltip content="Logout" position="right" delay={0}>
+          <button
+            className={`group w-full flex items-center rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 text-red-600 hover:bg-red-50 hover:text-red-700 ${
+              isCollapsed ? 'justify-center p-3' : 'p-3'
+            }`}
+            onClick={handleLogout}
+          >
+            <LogOut 
+              size={20} 
+              className="transition-transform duration-200 group-hover:scale-110 text-red-600" 
+            />
+            {!isCollapsed && (
+              <span className="ml-3 text-left">Logout</span>
+            )}
+          </button>
+        </Tooltip>
+      </div>
     </nav>
   );
 };

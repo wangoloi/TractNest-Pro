@@ -12,5 +12,3 @@ salesRoutes.get('/inventory', controller.getInventory);
 salesRoutes.post('/', controller.create);
 salesRoutes.delete('/:id', controller.remove);
 
-
-
