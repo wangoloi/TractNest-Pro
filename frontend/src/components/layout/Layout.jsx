@@ -21,9 +21,14 @@ const Layout = ({ stockItems }) => {
     '/contact': 'Contact',
     '/customers': 'Customers',
     '/messages': 'Messages',
+    '/admin-management': 'AdminManagement',
     '/settings': 'Settings',
     '/admin': 'Admin Dashboard',
-    '/admin/users': 'User Management'
+    '/admin/users': 'User Management',
+    '/organizations': 'Organizations',
+    '/enterprise-users': 'EnterpriseUsers',
+    '/system-settings': 'SystemSettings',
+    '/enterprise-analytics': 'EnterpriseAnalytics'
   };
 
   const getCurrentTab = () => {
@@ -43,9 +48,14 @@ const Layout = ({ stockItems }) => {
       'Contact': '/contact',
       'Customers': '/customers',
       'Messages': '/messages',
+      'AdminManagement': '/admin-management',
       'Settings': '/settings',
       'Admin Dashboard': '/admin',
-      'User Management': '/admin/users'
+      'User Management': '/admin/users',
+      'Organizations': '/organizations',
+      'EnterpriseUsers': '/enterprise-users',
+      'SystemSettings': '/system-settings',
+      'EnterpriseAnalytics': '/enterprise-analytics'
     };
     
     const route = tabToRouteMap[tab] || '/';
@@ -68,7 +78,7 @@ const Layout = ({ stockItems }) => {
           <div className="flex items-center gap-2">
             <button
               onClick={toggleSidebar}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none"
             >
               {isSidebarCollapsed ? (
                 <Menu className="text-gray-600" size={24} />

@@ -199,6 +199,8 @@ CREATE INDEX idx_app_settings_organization ON app_settings(organization_id);
 
 use tracknest;
 
+DROP DATABASE IF EXISTS tracknest;
+
 
 SHOW TABLES;
 

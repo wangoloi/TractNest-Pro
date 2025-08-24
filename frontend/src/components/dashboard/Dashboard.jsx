@@ -22,7 +22,9 @@ import api from '@utils/api';
 import { formatNumber } from '../../utils/formatNumber';
 import { useAuth } from '../../contexts/useAuth';
 import CustomerDashboard from '../customer/CustomerDashboard';
+import OwnerDashboard from '../owner/OwnerDashboard';
 import { useNavigate } from 'react-router-dom';
+import { SkeletonDashboard } from '../common/Skeleton';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -43,40 +45,64 @@ const Dashboard = () => {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
+    console.log('🔄 Dashboard useEffect triggered:', { user });
+    
     // If user is a customer, don't fetch admin data
     if (user?.role === 'customer') {
+      console.log('🔄 User is customer, skipping admin data fetch');
       setLoading(false);
       return;
     }
     
     // Only fetch data if user is authenticated
     if (!user) {
+      console.log('🔄 No user, skipping data fetch');
       setLoading(false);
       return;
     }
     
     // Add a small delay to ensure authentication is complete
     const timer = setTimeout(() => {
+      console.log('🔄 Starting dashboard data fetch for user:', user.role);
       fetchDashboardData();
-    }, 100);
+    }, 200);
     
     return () => clearTimeout(timer);
   }, [user]);
 
+  // Add error state for dashboard
+  const [dashboardError, setDashboardError] = useState(null);
+
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      setDashboardError(null);
       
-      // Fetch only necessary data in parallel
-      const [inventoryRes, salesRes] = await Promise.all([
-        api.get('/api/inventory'),
-        api.get('/api/sales')
-      ]);
+      console.log('🔄 Dashboard: Fetching data...');
+      
+      // Fetch only necessary data in parallel with error handling
+      let inventory = [];
+      let sales = [];
+      
+      try {
+        const inventoryRes = await api.get('/api/inventory');
+        inventory = inventoryRes.data || [];
+        console.log('✅ Inventory loaded:', inventory.length, 'items');
+      } catch (error) {
+        console.warn('⚠️ Failed to load inventory:', error.message);
+        inventory = [];
+      }
+      
+      try {
+        const salesRes = await api.get('/api/sales');
+        sales = salesRes.data || [];
+        console.log('✅ Sales loaded:', sales.length, 'items');
+      } catch (error) {
+        console.warn('⚠️ Failed to load sales:', error.message);
+        sales = [];
+      }
 
-      const inventory = inventoryRes.data || [];
-      const sales = salesRes.data || [];
-
-      console.log(sales, inventory, "Dashboard data loaded");
+      console.log('🔄 Dashboard data loaded:', { inventory: inventory.length, sales: sales.length });
 
       // Calculate statistics
       const totalSales = sales.reduce((sum, sale) => sum + (sale.totalPrice || 0), 0);
@@ -148,8 +174,23 @@ const Dashboard = () => {
       setTopProducts(topProductsList);
 
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+      console.error('❌ Error in dashboard data processing:', error);
+      setDashboardError('Failed to process dashboard data');
+      // Set default values when API fails
+      setStats({
+        totalSales: 0,
+        totalProfit: 0,
+        totalInvoices: 0,
+        totalItems: 0,
+        lowStockItems: 0,
+        pendingInvoices: 0,
+        monthlyGrowth: 0,
+        profitMargin: 0
+      });
+      setRecentActivity([]);
+      setTopProducts([]);
     } finally {
+      console.log('🔄 Dashboard loading complete');
       setLoading(false);
     }
   };
@@ -165,11 +206,105 @@ const Dashboard = () => {
     return <CustomerDashboard />;
   }
 
+  // If user is owner, show owner dashboard
+  if (user?.role === 'owner') {
+    return <OwnerDashboard />;
+  }
+
   // Show admin dashboard for admin/owner users
   if (loading) {
+    return <SkeletonDashboard />;
+  }
+
+  // Show error message if dashboard failed to load
+  if (dashboardError) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600"></div>
+      <div className="space-y-6">
+        {/* Error Banner */}
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <AlertTriangle size={24} className="text-red-500" />
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-red-900">Dashboard Connection Error</h3>
+              <p className="text-red-700">{dashboardError}</p>
+                             <p className="text-sm text-red-600 mt-1">
+                 The backend server might not be running. Please check if the server is started on port 3001.
+               </p>
+            </div>
+            <button
+              onClick={handleRefresh}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+
+        {/* Dashboard Content with Default Values */}
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
+          <p className="text-gray-600 mb-6">Welcome back! Here's what's happening with your business.</p>
+          
+          {/* Stats Grid with Default Values */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Sales</p>
+                  <p className="text-2xl font-bold text-gray-900">$0</p>
+                  <p className="text-sm text-gray-500 mt-2">No data available</p>
+                </div>
+                <div className="bg-green-100 rounded-full p-3">
+                  <DollarSign className="text-green-600" size={24} />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Profit</p>
+                  <p className="text-2xl font-bold text-gray-900">$0</p>
+                  <p className="text-sm text-gray-500 mt-2">No data available</p>
+                </div>
+                <div className="bg-blue-100 rounded-full p-3">
+                  <TrendingUp className="text-blue-600" size={24} />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Items</p>
+                  <p className="text-2xl font-bold text-gray-900">0</p>
+                  <p className="text-sm text-gray-500 mt-2">No data available</p>
+                </div>
+                <div className="bg-purple-100 rounded-full p-3">
+                  <Package className="text-purple-600" size={24} />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Invoices</p>
+                  <p className="text-2xl font-bold text-gray-900">0</p>
+                  <p className="text-sm text-gray-500 mt-2">No data available</p>
+                </div>
+                <div className="bg-orange-100 rounded-full p-3">
+                  <ShoppingCart className="text-orange-600" size={24} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 text-center text-gray-500">
+            <p>Dashboard data is currently unavailable due to server connection issues.</p>
+            <p className="text-sm">You can still access other features from the sidebar.</p>
+          </div>
+        </div>
       </div>
     );
   }

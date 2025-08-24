@@ -13,7 +13,10 @@ import {
   MessageSquare,
   UserPlus,
   Contact,
-  Box
+  Box,
+  Shield,
+  Activity,
+  Building2
 } from 'lucide-react';
 import { useAuth } from '../../contexts/useAuth';
 import Tooltip from '../shared/Tooltip';
@@ -24,6 +27,9 @@ const Navigation = ({ activeTab, onTabChange, isCollapsed = false, stockItems = 
   // Get user role from auth context or localStorage
   const userRole = user?.role || localStorage.getItem('userRole') || 'user';
   const isAdmin = userRole === 'admin' || userRole === 'owner';
+  const isOwner = userRole === 'owner';
+  
+  console.log('🔐 User Role:', userRole, 'isAdmin:', isAdmin, 'isOwner:', isOwner);
   
   // Base menu items for all users
   const baseMenuItems = [
@@ -69,7 +75,7 @@ const Navigation = ({ activeTab, onTabChange, isCollapsed = false, stockItems = 
     }
   ];
 
-  // Admin-only menu items
+  // Admin-only menu items (removed admin management - only for owners)
   const adminMenuItems = [
     { 
       id: 'contact', 
@@ -93,10 +99,44 @@ const Navigation = ({ activeTab, onTabChange, isCollapsed = false, stockItems = 
     }
   ];
 
+  // Owner-only menu items (enterprise management)
+  const ownerMenuItems = [
+    { 
+      id: 'organizations', 
+      name: 'Organizations', 
+      icon: Building2
+    },
+    { 
+      id: 'enterprise-users', 
+      name: 'EnterpriseUsers', 
+      icon: Users
+    },
+    { 
+      id: 'system-settings', 
+      name: 'SystemSettings', 
+      icon: Settings
+    },
+    { 
+      id: 'enterprise-analytics', 
+      name: 'EnterpriseAnalytics', 
+      icon: BarChart3
+    }
+  ];
+
+  // Logout item (available for all users)
+  const logoutItem = {
+    id: 'logout', 
+    name: 'Logout', 
+    icon: LogOut,
+    isLogout: true
+  };
+
   // Combine menu items based on user role
   const menuItems = [
     ...baseMenuItems,
-    ...(isAdmin ? adminMenuItems : [])
+    ...(isAdmin ? adminMenuItems : []),
+    ...(isOwner ? ownerMenuItems : []),
+    logoutItem // Logout is available for all users
   ];
 
 
@@ -112,8 +152,13 @@ const Navigation = ({ activeTab, onTabChange, isCollapsed = false, stockItems = 
       case 'Customers': return 'Customers';
       case 'Messages': return 'Messages';
       case 'Contact': return 'Contact Customers';
+      case 'AdminManagement': return 'Admin Management';
       case 'Admin Dashboard': return 'Admin Dashboard';
       case 'User Management': return 'User Management';
+      case 'Organizations': return 'Organizations';
+      case 'EnterpriseUsers': return 'Enterprise Users';
+      case 'SystemSettings': return 'System Settings';
+      case 'EnterpriseAnalytics': return 'Analytics';
       default: return itemName;
     }
   };
@@ -133,8 +178,15 @@ const Navigation = ({ activeTab, onTabChange, isCollapsed = false, stockItems = 
 
   return (
     <nav className="flex flex-col h-full">
-      {/* Scrollable Navigation Items */}
-      <div className="flex-1 p-4 space-y-2 overflow-y-auto">
+             {/* Scrollable Navigation Items */}
+       <div 
+         className="flex-1 p-4 space-y-2 overflow-y-auto navigation-scrollbar" 
+         style={{
+           scrollbarWidth: 'thin',
+           scrollbarColor: '#6b7280 #e5e7eb',
+           maxHeight: 'calc(100vh - 200px)'
+         }}
+       >
         {/* Navigation Items */}
         <ul className="space-y-1">
           {menuItems.map((item) => {
@@ -142,28 +194,38 @@ const Navigation = ({ activeTab, onTabChange, isCollapsed = false, stockItems = 
             const isActive = activeTab === item.name;
             
             const handleClick = () => {
-              onTabChange(item.name);
+              if (item.isLogout) {
+                handleLogout();
+              } else {
+                onTabChange(item.name);
+              }
             };
 
-                         // Count low stock items for notifications
-             const lowStockCount = item.id === 'notifications' 
-               ? (stockItems || []).filter(item => (item.qty || item.quantity || 0) < 5).length 
-               : 0;
+            // Count low stock items for notifications
+            const lowStockCount = item.id === 'notifications' 
+              ? (stockItems || []).filter(item => (item.qty || item.quantity || 0) < 5).length 
+              : 0;
             
             const buttonContent = (
-              <button
-                className={`group w-full flex items-center rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
-                  isActive
-                    ? 'bg-gradient-to-r from-green-600 to-blue-600 text-white font-medium shadow-lg transform scale-[1.02]'
-                    : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50 hover:text-gray-900'
-                } ${isCollapsed ? 'justify-center p-3' : 'p-3'}`}
-                onClick={handleClick}
-              >
+                             <button
+                 className={`group w-full flex items-center rounded-xl transition-all duration-300 focus:outline-none ${
+                   item.isLogout
+                     ? 'text-red-600 hover:bg-red-50 hover:text-red-700'
+                     : isActive
+                     ? 'bg-gradient-to-r from-green-600 to-blue-600 text-white font-medium shadow-lg transform scale-[1.02]'
+                     : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50 hover:text-gray-900'
+                 } ${isCollapsed ? 'justify-center p-3' : 'p-3'}`}
+                 onClick={handleClick}
+               >
                 <div className="relative">
                   <IconComponent 
                     size={20} 
                     className={`transition-transform duration-200 group-hover:scale-110 ${
-                      isActive ? 'text-white' : 'text-gray-600'
+                      item.isLogout 
+                        ? 'text-red-600' 
+                        : isActive 
+                        ? 'text-white' 
+                        : 'text-gray-600'
                     }`} 
                   />
                   {lowStockCount > 0 && item.id === 'notifications' && (
@@ -180,7 +242,7 @@ const Navigation = ({ activeTab, onTabChange, isCollapsed = false, stockItems = 
                 )}
 
                 {/* Active indicator */}
-                {isActive && !isCollapsed && (
+                {isActive && !isCollapsed && !item.isLogout && (
                   <div className="w-2 h-2 bg-white rounded-full ml-2 animate-pulse"></div>
                 )}
               </button>
@@ -203,44 +265,26 @@ const Navigation = ({ activeTab, onTabChange, isCollapsed = false, stockItems = 
 
       </div>
 
-      {/* User Info and Logout Section - Fixed at Bottom */}
-      <div className="p-4 border-t border-gray-200 space-y-3">
-        {/* User Profile Section */}
-        {!isCollapsed && (
-          <div className="p-3 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border border-green-200">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center">
-                <Users size={16} className="text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">
-                  {user?.first_name ? `${user.first_name} ${user.last_name}` : user?.username || 'Admin User'}
-                </p>
-                <p className="text-xs text-gray-600 truncate">{user?.email || 'admin@tracknest.com'}</p>
-                <p className="text-xs text-green-600 font-medium capitalize">{user?.role || 'owner'}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Logout Button */}
-        <Tooltip content="Logout" position="right" delay={0}>
-          <button
-            className={`group w-full flex items-center rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 text-red-600 hover:bg-red-50 hover:text-red-700 ${
-              isCollapsed ? 'justify-center p-3' : 'p-3'
-            }`}
-            onClick={handleLogout}
-          >
-            <LogOut 
-              size={20} 
-              className="transition-transform duration-200 group-hover:scale-110 text-red-600" 
-            />
-            {!isCollapsed && (
-              <span className="ml-3 text-left">Logout</span>
-            )}
-          </button>
-        </Tooltip>
-      </div>
+             {/* User Info Section - Fixed at Bottom */}
+       <div className="p-4 border-t border-gray-200">
+         {/* User Profile Section */}
+         {!isCollapsed && (
+           <div className="p-3 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border border-green-200">
+             <div className="flex items-center gap-3">
+               <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center">
+                 <Users size={16} className="text-white" />
+               </div>
+               <div className="flex-1 min-w-0">
+                 <p className="text-sm font-semibold text-gray-900 truncate">
+                   {user?.first_name ? `${user.first_name} ${user.last_name}` : user?.username || 'Admin User'}
+                 </p>
+                 <p className="text-xs text-gray-600 truncate">{user?.email || 'admin@tracknest.com'}</p>
+                 <p className="text-xs text-green-600 font-medium capitalize">{user?.role || 'owner'}</p>
+               </div>
+             </div>
+           </div>
+         )}
+       </div>
     </nav>
   );
 };

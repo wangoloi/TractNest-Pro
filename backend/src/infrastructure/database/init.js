@@ -292,8 +292,9 @@ async function insertDefaultData() {
     // Insert default admin users
     await pool.execute(`
       INSERT IGNORE INTO users (id, organization_id, username, email, password_hash, first_name, last_name, role, status) VALUES 
-      (1, 1, 'admin', 'admin@tracknest.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Admin', 'User', 'owner', 'active'),
-      (2, 1, 'bachawa', 'bachawa@tracknest.com', '$2a$10$CDMl5vkIdt3BhK/5D2lmZ.mmFO1C5LyZ6tBPI2WAJkP.4Mp4po/jm', 'Bachawa', 'Admin', 'owner', 'active')
+      (1, 1, 'admin', 'admin@tracknest.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Admin', 'User', 'admin', 'active'),
+      (2, 1, 'user', 'user@tracknest.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Admin', 'User', 'user', 'active'),
+      (3, 1, 'bachawa', 'bachawa@tracknest.com', '$2a$10$CDMl5vkIdt3BhK/5D2lmZ.mmFO1C5LyZ6tBPI2WAJkP.4Mp4po/jm', 'Bachawa', 'Admin', 'owner', 'active')
     `);
     console.log('✅ Default admin users created');
     

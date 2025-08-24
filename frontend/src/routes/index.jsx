@@ -25,6 +25,10 @@ import AppSettings from '../components/settings/AppSettings';
 
 // Admin Components
 import UserManagement from '../components/admin/UserManagement';
+import AdminManagement from '../components/admin/AdminManagement';
+
+// Owner Components
+import OrganizationsManagement from '../components/owner/OrganizationsManagement';
 
 const AppRoutes = ({ stockItems }) => {
   return (
@@ -76,6 +80,51 @@ const AppRoutes = ({ stockItems }) => {
         <Route path="admin/users" element={
           <ProtectedRoute adminOnly={true}>
             <UserManagement />
+          </ProtectedRoute>
+        } />
+        <Route path="admin-management" element={
+          <ProtectedRoute adminOnly={true}>
+            <AdminManagement />
+          </ProtectedRoute>
+        } />
+        
+        {/* Owner-only routes */}
+        <Route path="organizations" element={
+          <ProtectedRoute ownerOnly={true}>
+            <OrganizationsManagement />
+          </ProtectedRoute>
+        } />
+        <Route path="enterprise-users" element={
+          <ProtectedRoute ownerOnly={true}>
+            <div className="p-6">
+              <h1 className="text-3xl font-bold text-gray-900">Enterprise Users Management</h1>
+              <p className="text-gray-600">Manage users across all organizations</p>
+              <div className="mt-6 p-8 bg-gray-50 rounded-lg text-center">
+                <p className="text-gray-500">Enterprise Users Management coming soon...</p>
+              </div>
+            </div>
+          </ProtectedRoute>
+        } />
+        <Route path="system-settings" element={
+          <ProtectedRoute ownerOnly={true}>
+            <div className="p-6">
+              <h1 className="text-3xl font-bold text-gray-900">System Settings</h1>
+              <p className="text-gray-600">Configure enterprise-wide settings</p>
+              <div className="mt-6 p-8 bg-gray-50 rounded-lg text-center">
+                <p className="text-gray-500">System Settings coming soon...</p>
+              </div>
+            </div>
+          </ProtectedRoute>
+        } />
+        <Route path="enterprise-analytics" element={
+          <ProtectedRoute ownerOnly={true}>
+            <div className="p-6">
+              <h1 className="text-3xl font-bold text-gray-900">Enterprise Analytics</h1>
+              <p className="text-gray-600">View analytics across all organizations</p>
+              <div className="mt-6 p-8 bg-gray-50 rounded-lg text-center">
+                <p className="text-gray-500">Enterprise Analytics coming soon...</p>
+              </div>
+            </div>
           </ProtectedRoute>
         } />
       </Route>
