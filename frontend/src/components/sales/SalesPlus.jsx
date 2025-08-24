@@ -20,7 +20,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { formatNumber } from '../../utils/formatNumber';
 
-import api from '@utils/api';
+// Removed API import - using mock data
 
 const SalesPlus = () => {
   // Data states
@@ -90,21 +90,57 @@ const SalesPlus = () => {
 
   const fetchInitialData = async () => {
     try {
-      const [salesRes, inventoryRes] = await Promise.all([
-        api.get('/api/sales'),
-        api.get('/api/inventory')
-      ]);
+      // Mock data for sales records
+      const mockSalesRecords = [
+        {
+          id: 1,
+          invoice_number: 'INV-1703123456789-123',
+          customer_name: 'John Smith',
+          customer_email: 'john@example.com',
+          customer_phone: '+1234567890',
+          sale_date: '2024-01-20',
+          total_amount: 2500,
+          profit: 750,
+          items: [
+            { name: 'Laptop Pro', quantity: 1, unit_price: 1200, total: 1200 },
+            { name: 'Wireless Headphones', quantity: 2, unit_price: 150, total: 300 }
+          ]
+        },
+        {
+          id: 2,
+          invoice_number: 'INV-1703123456788-456',
+          customer_name: 'Jane Doe',
+          customer_email: 'jane@example.com',
+          customer_phone: '+1234567891',
+          sale_date: '2024-01-19',
+          total_amount: 1800,
+          profit: 540,
+          items: [
+            { name: 'Smartphone X', quantity: 1, unit_price: 800, total: 800 },
+            { name: 'Tablet Air', quantity: 1, unit_price: 500, total: 500 }
+          ]
+        }
+      ];
+
+      // Mock data for stock items
+      const mockStockItems = [
+        { id: 1, name: 'Laptop Pro', qty: 15, selling_price: 1200, cost_price: 900 },
+        { id: 2, name: 'Smartphone X', qty: 25, selling_price: 800, cost_price: 600 },
+        { id: 3, name: 'Tablet Air', qty: 8, selling_price: 500, cost_price: 350 },
+        { id: 4, name: 'Wireless Headphones', qty: 30, selling_price: 150, cost_price: 90 },
+        { id: 5, name: 'Gaming Mouse', qty: 12, selling_price: 80, cost_price: 45 }
+      ];
       
-      setSalesRecords(salesRes.data || []);
-      setStockItems(inventoryRes.data || []);
+      setSalesRecords(mockSalesRecords);
+      setStockItems(mockStockItems);
       
       // Calculate total sales
-      const totalAmount = (salesRes.data || []).reduce((sum, sale) => sum + (sale.totalPrice || 0), 0);
-      const totalProfit = (salesRes.data || []).reduce((sum, sale) => sum + (sale.profit || 0), 0);
+      const totalAmount = mockSalesRecords.reduce((sum, sale) => sum + (sale.total_amount || 0), 0);
+      const totalProfit = mockSalesRecords.reduce((sum, sale) => sum + (sale.profit || 0), 0);
       setTotalSales({ amount: totalAmount, profit: totalProfit });
       
     } catch (error) {
-      console.error('Error fetching initial data:', error);
+      console.error('Error loading mock data:', error);
       setSalesRecords([]);
       setStockItems([]);
       setTotalSales({ amount: 0, profit: 0 });

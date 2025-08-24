@@ -13,7 +13,7 @@ import {
   RefreshCw,
   Zap
 } from 'lucide-react';
-import api from '@utils/api';
+// Removed API import - using mock data
 import { formatNumber } from '../../utils/formatNumber';
 import { useNavigate } from 'react-router-dom';
 import { SkeletonDashboard } from '../common/Skeleton';
@@ -34,35 +34,36 @@ const OwnerDashboard = () => {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
+    // Start loading immediately
+    setLoading(true);
     fetchOwnerData();
+    
+    // Fallback timeout to prevent infinite loading (reduced for faster loading)
+    const fallbackTimer = setTimeout(() => {
+      console.log('⚠️ Owner Dashboard fallback timeout - forcing loading to false');
+      setLoading(false);
+    }, 3000); // 3 seconds max for immediate loading
+    
+    return () => clearTimeout(fallbackTimer);
   }, []);
 
   const fetchOwnerData = async () => {
     try {
-      setLoading(true);
       console.log('🔄 Owner Dashboard: Fetching data...');
       
-      // Fetch organizations and stats with individual error handling
-      let orgs = [];
-      let statsData = {};
+      // Mock data for organizations
+      const orgs = [
+        { id: 1, name: 'Demo Organization', slug: 'demo', status: 'active', created_at: new Date().toISOString() },
+        { id: 2, name: 'Tech Solutions Inc', slug: 'techsolutions', status: 'active', created_at: new Date().toISOString() },
+        { id: 3, name: 'Global Enterprises', slug: 'globalenterprises', status: 'pending', created_at: new Date().toISOString() }
+      ];
       
-      try {
-        const orgsRes = await api.get('/api/admin/organizations');
-        orgs = orgsRes.data || [];
-        console.log('✅ Organizations loaded:', orgs.length, 'organizations');
-      } catch (error) {
-        console.warn('⚠️ Failed to load organizations:', error.message);
-        orgs = [];
-      }
-      
-      try {
-        const statsRes = await api.get('/api/admin/stats');
-        statsData = statsRes.data || {};
-        console.log('✅ Stats loaded:', statsData);
-      } catch (error) {
-        console.warn('⚠️ Failed to load stats:', error.message);
-        statsData = {};
-      }
+      // Mock data for stats
+      const statsData = {
+        totalUsers: 15,
+        totalRevenue: 125000,
+        totalInventory: 250
+      };
 
       setOrganizations(orgs);
       setStats({
@@ -74,7 +75,7 @@ const OwnerDashboard = () => {
         totalInventory: statsData.totalInventory || 0
       });
 
-      // Mock recent activity for now
+      // Mock recent activity
       const activity = orgs.slice(0, 5).map(org => ({
         id: org.id,
         type: 'organization',
@@ -85,7 +86,7 @@ const OwnerDashboard = () => {
       }));
 
       setRecentActivity(activity);
-      console.log('🔄 Owner Dashboard data loaded successfully');
+      console.log('✅ Owner Dashboard data loaded successfully');
 
     } catch (error) {
       console.error('❌ Error in owner dashboard data processing:', error);
@@ -113,7 +114,17 @@ const OwnerDashboard = () => {
   };
 
   if (loading) {
-    return <SkeletonDashboard />;
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Enterprise Dashboard</h1>
+            <p className="text-gray-600">Loading enterprise data...</p>
+          </div>
+        </div>
+        <SkeletonDashboard />
+      </div>
+    );
   }
 
   return (

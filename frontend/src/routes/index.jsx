@@ -11,7 +11,6 @@ import ProtectedRoute from '../components/auth/ProtectedRoute';
 
 // Main Components
 import Dashboard from '../components/dashboard/Dashboard';
-import Inventory from '../components/inventory/Inventory';
 import MySales from '../components/sales/MySales';
 import SalesPlus from '../components/sales/SalesPlus';
 import MyStock from '../components/stocking/MyStock';
@@ -20,12 +19,11 @@ import Statements from '../pages/Statements';
 import Notifications from '../pages/Notifications';
 import ContactForm from '../components/contact/ContactForm';
 import CustomerList from '../components/customers/CustomerList';
-import CustomerMessages from '../components/messages/CustomerMessages';
+import Messages from '../components/messages/CustomerMessages';
 import AppSettings from '../components/settings/AppSettings';
 
 // Admin Components
 import UserManagement from '../components/admin/UserManagement';
-import AdminManagement from '../components/admin/AdminManagement';
 
 // Owner Components
 import OrganizationsManagement from '../components/owner/OrganizationsManagement';
@@ -48,7 +46,6 @@ const AppRoutes = ({ stockItems }) => {
         </ProtectedRoute>
       }>
         <Route index element={<Dashboard />} />
-        <Route path="inventory" element={<Inventory />} />
         <Route path="stocking" element={<StockingPlus />} />
         <Route path="sales" element={<SalesPlus />} />
         <Route path="my-sales" element={<MySales />} />
@@ -57,34 +54,16 @@ const AppRoutes = ({ stockItems }) => {
         <Route path="notifications" element={<Notifications />} />
         
         {/* Admin-only routes */}
-        <Route path="contact" element={
+        <Route path="messages" element={<Messages />} />
+
+        <Route path="users" element={
           <ProtectedRoute adminOnly={true}>
-            <ContactForm />
-          </ProtectedRoute>
-        } />
-        <Route path="customers" element={
-          <ProtectedRoute adminOnly={true}>
-            <CustomerList />
-          </ProtectedRoute>
-        } />
-        <Route path="messages" element={
-          <ProtectedRoute adminOnly={true}>
-            <CustomerMessages />
-          </ProtectedRoute>
-        } />
-        <Route path="settings" element={
-          <ProtectedRoute adminOnly={true}>
-            <AppSettings />
+            <UserManagement />
           </ProtectedRoute>
         } />
         <Route path="admin/users" element={
           <ProtectedRoute adminOnly={true}>
             <UserManagement />
-          </ProtectedRoute>
-        } />
-        <Route path="admin-management" element={
-          <ProtectedRoute adminOnly={true}>
-            <AdminManagement />
           </ProtectedRoute>
         } />
         
@@ -105,17 +84,7 @@ const AppRoutes = ({ stockItems }) => {
             </div>
           </ProtectedRoute>
         } />
-        <Route path="system-settings" element={
-          <ProtectedRoute ownerOnly={true}>
-            <div className="p-6">
-              <h1 className="text-3xl font-bold text-gray-900">System Settings</h1>
-              <p className="text-gray-600">Configure enterprise-wide settings</p>
-              <div className="mt-6 p-8 bg-gray-50 rounded-lg text-center">
-                <p className="text-gray-500">System Settings coming soon...</p>
-              </div>
-            </div>
-          </ProtectedRoute>
-        } />
+
         <Route path="enterprise-analytics" element={
           <ProtectedRoute ownerOnly={true}>
             <div className="p-6">

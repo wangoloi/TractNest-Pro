@@ -4,7 +4,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { formatNumber } from '../../utils/formatNumber';
 
-import api from '@utils/api';
+// Removed API import - using mock data
 import { toast } from 'react-toastify';
 
 const StockingPlus = () => {
@@ -49,20 +49,46 @@ const StockingPlus = () => {
 
   const fetchInitialData = async () => {
     try {
-      const [inventoryRes, receiptsRes] = await Promise.all([
-        api.get('/api/inventory'),
-        api.get('/api/receipts')
-      ]);
+      // Mock data for inventory
+      const mockInventory = [
+        { id: 1, name: 'Laptop Pro', qty: 15, selling_price: 1200, cost_price: 900 },
+        { id: 2, name: 'Smartphone X', qty: 25, selling_price: 800, cost_price: 600 },
+        { id: 3, name: 'Tablet Air', qty: 8, selling_price: 500, cost_price: 350 },
+        { id: 4, name: 'Wireless Headphones', qty: 30, selling_price: 150, cost_price: 90 },
+        { id: 5, name: 'Gaming Mouse', qty: 12, selling_price: 80, cost_price: 45 }
+      ];
+
+      // Mock data for receipts
+      const mockReceipts = [
+        {
+          id: 1,
+          receipt_number: 'REC-001',
+          company_name: 'Tech Supplies Inc',
+          company_contact: '+1234567890',
+          receipt_date: '2024-01-15',
+          total_amount: 25000,
+          items: mockInventory
+        },
+        {
+          id: 2,
+          receipt_number: 'REC-002',
+          company_name: 'Global Electronics',
+          company_contact: '+1234567891',
+          receipt_date: '2024-01-10',
+          total_amount: 18000,
+          items: mockInventory.slice(0, 3)
+        }
+      ];
       
-      setStockItems(inventoryRes.data || []);
-      setReceipts(receiptsRes.data || []);
+      setStockItems(mockInventory);
+      setReceipts(mockReceipts);
       
       // Calculate total stock amount
-      const totalAmount = (receiptsRes.data || []).reduce((sum, receipt) => sum + (receipt.total_amount || 0), 0);
+      const totalAmount = mockReceipts.reduce((sum, receipt) => sum + (receipt.total_amount || 0), 0);
       setTotalStockAmount(totalAmount);
       
     } catch (error) {
-      console.error('Error fetching initial data:', error);
+      console.error('Error loading mock data:', error);
       setStockItems([]);
       setReceipts([]);
       setTotalStockAmount(0);
@@ -630,7 +656,7 @@ const StockingPlus = () => {
        )}
 
        {/* Totals */}
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
          <div className="p-4 bg-blue-50 rounded-lg">
            <h3 className="text-lg font-semibold text-gray-800">Receipt Total</h3>
            <p className="text-2xl font-bold text-blue-600">UGX {formatNumber(receiptTotal)}</p>
@@ -639,6 +665,18 @@ const StockingPlus = () => {
            <h3 className="text-lg font-semibold text-gray-800">Grand Total Stocked Amount</h3>
            <p className="text-2xl font-bold text-green-600">UGX {formatNumber(totalStockAmount)}</p>
          </div>
+       </div>
+
+       {/* Save Receipt Button */}
+       <div className="flex justify-center">
+         <button
+           onClick={handleSaveReceipt}
+           disabled={isSaving || stockItems.length === 0}
+           className="flex items-center gap-2 px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg font-semibold"
+         >
+           <Save size={20} />
+           {isSaving ? 'Saving Receipt...' : 'Save Receipt'}
+         </button>
        </div>
     </div>
   );

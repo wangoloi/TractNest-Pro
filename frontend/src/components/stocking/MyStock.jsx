@@ -4,7 +4,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { formatNumber } from '../../utils/formatNumber';
 import { normalizeName } from '../../utils/normalizeName';
-import api from '@utils/api';
+// Removed API import - using mock data
 
 
 const MyStock = () => {
@@ -26,20 +26,31 @@ const MyStock = () => {
 
   const fetchInitialData = async () => {
     try {
-      const [inventoryRes, receiptsRes] = await Promise.all([
-        api.get('/api/inventory'),
-        api.get('/api/receipts')
-      ]);
+      // Mock data for inventory
+      const mockInventory = [
+        { id: 1, name: 'Laptop Pro', qty: 15, selling_price: 1200, amount: 18000 },
+        { id: 2, name: 'Smartphone X', qty: 25, selling_price: 800, amount: 20000 },
+        { id: 3, name: 'Tablet Air', qty: 8, selling_price: 500, amount: 4000 },
+        { id: 4, name: 'Wireless Headphones', qty: 30, selling_price: 150, amount: 4500 },
+        { id: 5, name: 'Gaming Mouse', qty: 12, selling_price: 80, amount: 960 }
+      ];
       
-      setStockItems(inventoryRes.data || []);
-      setReceipts(receiptsRes.data || []);
+      // Mock data for receipts
+      const mockReceipts = [
+        { id: 'REC-001', company: 'Tech Supplies Inc', date: '2024-01-15', total_amount: 25000, items: mockInventory },
+        { id: 'REC-002', company: 'Global Electronics', date: '2024-01-10', total_amount: 18000, items: mockInventory.slice(0, 3) },
+        { id: 'REC-003', company: 'Digital World', date: '2024-01-05', total_amount: 12000, items: mockInventory.slice(1, 4) }
+      ];
+      
+      setStockItems(mockInventory);
+      setReceipts(mockReceipts);
       
       // Calculate total stock amount
-      const totalAmount = (receiptsRes.data || []).reduce((sum, receipt) => sum + (receipt.total_amount || 0), 0);
+      const totalAmount = mockReceipts.reduce((sum, receipt) => sum + (receipt.total_amount || 0), 0);
       setTotalStockAmount(totalAmount);
       
     } catch (error) {
-      console.error('Error fetching initial data:', error);
+      console.error('Error loading mock data:', error);
       setStockItems([]);
       setReceipts([]);
       setTotalStockAmount(0);

@@ -11,23 +11,17 @@ const Layout = ({ stockItems }) => {
   // Map routes to tab names for backward compatibility
   const routeToTabMap = {
     '/': 'Dashboard',
-    '/inventory': 'Inventory',
     '/stocking': 'StockingPlus',
     '/sales': 'SalesPlus',
     '/my-stock': 'MyStock',
     '/my-sales': 'MySales',
     '/statements': 'Statements',
     '/notifications': 'Notifications',
-    '/contact': 'Contact',
-    '/customers': 'Customers',
+    '/users': 'Users',
     '/messages': 'Messages',
-    '/admin-management': 'AdminManagement',
-    '/settings': 'Settings',
-    '/admin': 'Admin Dashboard',
-    '/admin/users': 'User Management',
+    '/admin/users': 'Users',
     '/organizations': 'Organizations',
     '/enterprise-users': 'EnterpriseUsers',
-    '/system-settings': 'SystemSettings',
     '/enterprise-analytics': 'EnterpriseAnalytics'
   };
 
@@ -38,23 +32,16 @@ const Layout = ({ stockItems }) => {
   const handleTabChange = (tab) => {
     const tabToRouteMap = {
       'Dashboard': '/',
-      'Inventory': '/inventory',
       'StockingPlus': '/stocking',
       'SalesPlus': '/sales',
       'MyStock': '/my-stock',
       'MySales': '/my-sales',
       'Statements': '/statements',
       'Notifications': '/notifications',
-      'Contact': '/contact',
-      'Customers': '/customers',
+      'Users': '/users',
       'Messages': '/messages',
-      'AdminManagement': '/admin-management',
-      'Settings': '/settings',
-      'Admin Dashboard': '/admin',
-      'User Management': '/admin/users',
       'Organizations': '/organizations',
       'EnterpriseUsers': '/enterprise-users',
-      'SystemSettings': '/system-settings',
       'EnterpriseAnalytics': '/enterprise-analytics'
     };
     

@@ -9,12 +9,10 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 // Routes
 import AppRoutes from './routes';
 
-// API Utility
-import api from './utils/api';
-
 // Context
 import { AuthProvider } from './contexts/AuthContext';
 import { useAuth } from './contexts/useAuth';
+import { MessageProvider } from './contexts/MessageContext';
 
 
 
@@ -44,13 +42,18 @@ function AppContent() {
     
     const fetchData = async () => {
       try {
-        console.log('🔄 Making API call to /api/inventory');
-        const inventoryRes = await api.get('/api/inventory');
-        console.log('🔄 Inventory response:', inventoryRes.data);
-        setStockItems(inventoryRes.data || []);
+        console.log('🔄 Loading mock data for stock items');
+        // Mock data for stock items
+        const mockStockItems = [
+          { id: 1, name: 'Laptop Pro', quantity: 15, price: 1200 },
+          { id: 2, name: 'Smartphone X', quantity: 25, price: 800 },
+          { id: 3, name: 'Tablet Air', quantity: 8, price: 500 },
+          { id: 4, name: 'Wireless Headphones', quantity: 30, price: 150 },
+          { id: 5, name: 'Gaming Mouse', quantity: 12, price: 80 }
+        ];
+        setStockItems(mockStockItems);
       } catch (error) {
-        console.error('❌ Error fetching data:', error);
-        // Don't fail completely, just set empty data
+        console.error('❌ Error loading mock data:', error);
         setStockItems([]);
       } finally {
         console.log('🔄 Setting loading to false');
@@ -93,19 +96,21 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
+      <MessageProvider>
+        <AppContent />
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
+      </MessageProvider>
     </AuthProvider>
   );
 }

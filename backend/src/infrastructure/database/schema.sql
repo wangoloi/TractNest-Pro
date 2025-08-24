@@ -206,7 +206,7 @@ SHOW TABLES;
 
 DESC users;
 
-SELECT * FROM sales_transactions;
+SELECT * FROM customers;
 
 
 

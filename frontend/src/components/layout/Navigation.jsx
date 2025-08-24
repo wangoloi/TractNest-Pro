@@ -19,10 +19,12 @@ import {
   Building2
 } from 'lucide-react';
 import { useAuth } from '../../contexts/useAuth';
+import { useMessages } from '../../contexts/MessageContext';
 import Tooltip from '../shared/Tooltip';
 
 const Navigation = ({ activeTab, onTabChange, isCollapsed = false, stockItems = [] }) => {
   const { logout, user } = useAuth();
+  const { unreadCount } = useMessages();
   
   // Get user role from auth context or localStorage
   const userRole = user?.role || localStorage.getItem('userRole') || 'user';
@@ -37,11 +39,6 @@ const Navigation = ({ activeTab, onTabChange, isCollapsed = false, stockItems = 
       id: 'dashboard', 
       name: 'Dashboard', 
       icon: Home
-    },
-    { 
-      id: 'inventory', 
-      name: 'Inventory', 
-      icon: Box
     },
     { 
       id: 'stocking', 
@@ -72,30 +69,20 @@ const Navigation = ({ activeTab, onTabChange, isCollapsed = false, stockItems = 
       id: 'notifications', 
       name: 'Notifications', 
       icon: Bell
-    }
-  ];
-
-  // Admin-only menu items (removed admin management - only for owners)
-  const adminMenuItems = [
-    { 
-      id: 'contact', 
-      name: 'Contact', 
-      icon: Contact
-    },
-    { 
-      id: 'customers', 
-      name: 'Customers', 
-      icon: UserPlus
     },
     { 
       id: 'messages', 
       name: 'Messages', 
       icon: MessageSquare
-    },
+    }
+  ];
+
+  // Admin-only menu items
+  const adminMenuItems = [
     { 
-      id: 'settings', 
-      name: 'Settings', 
-      icon: Settings
+      id: 'users', 
+      name: 'Users', 
+      icon: Users
     }
   ];
 
@@ -110,11 +97,6 @@ const Navigation = ({ activeTab, onTabChange, isCollapsed = false, stockItems = 
       id: 'enterprise-users', 
       name: 'EnterpriseUsers', 
       icon: Users
-    },
-    { 
-      id: 'system-settings', 
-      name: 'SystemSettings', 
-      icon: Settings
     },
     { 
       id: 'enterprise-analytics', 
@@ -147,17 +129,10 @@ const Navigation = ({ activeTab, onTabChange, isCollapsed = false, stockItems = 
       case 'SalesPlus': return 'Sales';
       case 'MySales': return 'My Sales';
       case 'MyStock': return 'My Stock';
-      case 'Inventory': return 'Inventory';
-      case 'Receipts': return 'Receipts';
-      case 'Customers': return 'Customers';
+      case 'Users': return 'Users';
       case 'Messages': return 'Messages';
-      case 'Contact': return 'Contact Customers';
-      case 'AdminManagement': return 'Admin Management';
-      case 'Admin Dashboard': return 'Admin Dashboard';
-      case 'User Management': return 'User Management';
       case 'Organizations': return 'Organizations';
       case 'EnterpriseUsers': return 'Enterprise Users';
-      case 'SystemSettings': return 'System Settings';
       case 'EnterpriseAnalytics': return 'Analytics';
       default: return itemName;
     }
@@ -206,6 +181,9 @@ const Navigation = ({ activeTab, onTabChange, isCollapsed = false, stockItems = 
               ? (stockItems || []).filter(item => (item.qty || item.quantity || 0) < 5).length 
               : 0;
             
+            // Count unread messages
+            const messageCount = item.id === 'messages' ? unreadCount : 0;
+            
             const buttonContent = (
                              <button
                  className={`group w-full flex items-center rounded-xl transition-all duration-300 focus:outline-none ${
@@ -231,6 +209,11 @@ const Navigation = ({ activeTab, onTabChange, isCollapsed = false, stockItems = 
                   {lowStockCount > 0 && item.id === 'notifications' && (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
                       {lowStockCount}
+                    </span>
+                  )}
+                  {messageCount > 0 && item.id === 'messages' && (
+                    <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+                      {messageCount}
                     </span>
                   )}
                 </div>
