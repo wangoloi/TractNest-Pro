@@ -12,7 +12,7 @@ import {
   DollarSign
 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { formatNumber } from '../../../utils/formatNumber';
+import { formatNumber } from '../../../lib/utils/formatNumber';
 
 const CustomerManager = () => {
   const [customers, setCustomers] = useState([]);

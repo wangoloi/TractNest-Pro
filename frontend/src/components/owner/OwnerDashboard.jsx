@@ -14,7 +14,7 @@ import {
   Zap
 } from 'lucide-react';
 // Removed API import - using mock data
-import { formatNumber } from '../../utils/formatNumber';
+import { formatNumber } from '../../lib/utils/formatNumber';
 import { useNavigate } from 'react-router-dom';
 import { SkeletonDashboard } from '../common/Skeleton';
 

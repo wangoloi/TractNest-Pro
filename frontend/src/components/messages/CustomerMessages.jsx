@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Send, Plus, Search, Filter, RefreshCw, User, MessageSquare, Clock, Check, CheckCheck } from 'lucide-react';
-import DataTable from '../shared/DataTable';
-import Modal from '../shared/Modal';
-import Dropdown from '../shared/Dropdown';
-import { useMessages } from '../../contexts/MessageContext';
+import DataTable from '../ui/tables/DataTable';
+import Modal from '../ui/modals/Modal';
+import Dropdown from '../ui/forms/Dropdown';
+import { useMessages } from '../../app/providers/MessageContext';
 
 const Messages = () => {
   const { messages, markAsRead, addMessage } = useMessages();

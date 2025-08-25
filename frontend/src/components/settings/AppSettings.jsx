@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, Save, RefreshCw, Mail, MessageSquare, Bell } from 'lucide-react';
-import api from '@utils/api';
+import api from '../../lib/utils/api';
 import { toast } from 'react-toastify';
-import Dropdown from '../shared/Dropdown';
+import Dropdown from '../ui/forms/Dropdown';
 
 const AppSettings = () => {
 

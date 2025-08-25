@@ -46,8 +46,6 @@ textarea:focus,
 select:focus {
   border-color: #10b981;
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-<<<<<<< HEAD
-=======
 }
 
 /* Custom scrollbar styles for webkit browsers */
@@ -68,5 +66,4 @@ select:focus {
 
 .navigation-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #4b5563;
->>>>>>> 10343382ae11e45544ef657d05391aed8a6c8eb9
 }

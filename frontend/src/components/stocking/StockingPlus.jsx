@@ -4,7 +4,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { formatNumber } from '../../utils/formatNumber';
 
-// Removed API import - using mock data
+import api from '../../lib/utils/api';
 import { toast } from 'react-toastify';
 
 const StockingPlus = () => {

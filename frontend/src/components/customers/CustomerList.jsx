@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Edit, Trash2, Mail, Phone, User } from 'lucide-react';
-import api from '@utils/api';
+import api from '../../lib/utils/api';
 import { toast } from 'react-toastify';
-import Dropdown from '../shared/Dropdown';
+import Dropdown from '../ui/forms/Dropdown';
 
 const CustomerList = () => {
   const navigate = useNavigate();
@@ -228,96 +228,7 @@ const CustomerList = () => {
         </table>
       </div>
 
-<<<<<<< HEAD
 
-=======
-      {/* Add Customer Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Add New Customer</h3>
-            <form onSubmit={handleAddCustomer}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Email</label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Phone</label>
-                  <input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">WhatsApp</label>
-                  <input
-                    type="tel"
-                    value={formData.whatsapp}
-                    onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
-                    className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Address</label>
-                  <textarea
-                    value={formData.address}
-                    onChange={(e) => setFormData({...formData, address: e.target.value})}
-                    rows={3}
-                    className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Type</label>
-                  <Dropdown
-                    options={[
-                      { value: 'individual', label: 'Individual' },
-                      { value: 'business', label: 'Business' }
-                    ]}
-                    value={formData.customer_type}
-                    onChange={(value) => setFormData({...formData, customer_type: value})}
-                    placeholder="Select customer type..."
-                    size="sm"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-2 mt-6">
-                <button
-                  type="submit"
-                  className="flex-1 bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors"
-                >
-                  Add Customer
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
->>>>>>> 10343382ae11e45544ef657d05391aed8a6c8eb9
 
       {/* Edit Customer Modal */}
       {showEditModal && selectedCustomer && (

@@ -19,8 +19,8 @@ import {
   Award,
   FileText
 } from 'lucide-react';
-import { formatNumber } from '../../utils/formatNumber';
-import { useAuth } from '../../contexts/useAuth';
+import { formatNumber } from '../../lib/utils/formatNumber';
+import { useAuth } from '../../app/providers/AuthContext';
 import CustomerDashboard from '../customer/CustomerDashboard';
 import OwnerDashboard from '../owner/OwnerDashboard';
 import { useNavigate } from 'react-router-dom';

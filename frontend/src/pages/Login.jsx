@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Lock, User, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { useAuth } from '../contexts/useAuth';
-import ForgotPassword from '../components/auth/ForgotPassword';
+import { useAuth } from '../app/providers/AuthContext';
+import ForgotPassword from '../features/auth/components/ForgotPassword';
 
 const Login = () => {
   const [username, setUsername] = useState('');

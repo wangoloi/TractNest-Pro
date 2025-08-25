@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
-import { useAuth } from '../../../contexts/useAuth';
-import { useRoleAccess } from '../../../hooks/useRoleAccess';
+import { useAuth } from '../../../app/providers/AuthContext';
+import { useRoleAccess } from '../../../features/auth/hooks/useRoleAccess';
 import {
   Home,
   ShoppingCart,
