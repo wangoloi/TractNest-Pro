@@ -20,18 +20,13 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { formatNumber } from '../../utils/formatNumber';
 
-import api from '@utils/api';
+// Removed API import - using mock data
 
-const SalesPlus = ({
-  salesRecords,
-  setSalesRecords,
-  totalSales,
-  setTotalSales,
-
-  stockItems,
-  setStockItems,
-  refreshData,
-}) => {
+const SalesPlus = () => {
+  // Data states
+  const [salesRecords, setSalesRecords] = useState([]);
+  const [totalSales, setTotalSales] = useState({ amount: 0, profit: 0 });
+  const [stockItems, setStockItems] = useState([]);
   // Sale info states
   const [saleDate, setSaleDate] = useState(new Date().toISOString().split('T')[0]);
   const [customerName, setCustomerName] = useState('');
@@ -69,11 +64,88 @@ const SalesPlus = ({
 
   const searchRef = useRef(null);
 
-  // Generate invoice number on component mount
+  const generateInvoiceNumber = () => {
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 1000);
+    setInvoiceNumber(`INV-${timestamp}-${random}`);
+  };
+
+  const fetchAvailableInventory = useCallback(async () => {
+    try {
+      // Use the main inventory data that's already being managed by the parent
+      // This ensures consistency with the stocking system
+      console.log('Fetching available inventory from stockItems:', stockItems);
+      setAvailableInventory(stockItems || []);
+    } catch (error) {
+      console.error('Failed to fetch available inventory:', error);
+      setAvailableInventory([]);
+    }
+  }, [stockItems]);
+
+  // Fetch initial data on component mount
   useEffect(() => {
     generateInvoiceNumber();
-    fetchAvailableInventory();
-  }, [fetchAvailableInventory]);
+    fetchInitialData();
+  }, []);
+
+  const fetchInitialData = async () => {
+    try {
+      // Mock data for sales records
+      const mockSalesRecords = [
+        {
+          id: 1,
+          invoice_number: 'INV-1703123456789-123',
+          customer_name: 'John Smith',
+          customer_email: 'john@example.com',
+          customer_phone: '+1234567890',
+          sale_date: '2024-01-20',
+          total_amount: 2500,
+          profit: 750,
+          items: [
+            { name: 'Laptop Pro', quantity: 1, unit_price: 1200, total: 1200 },
+            { name: 'Wireless Headphones', quantity: 2, unit_price: 150, total: 300 }
+          ]
+        },
+        {
+          id: 2,
+          invoice_number: 'INV-1703123456788-456',
+          customer_name: 'Jane Doe',
+          customer_email: 'jane@example.com',
+          customer_phone: '+1234567891',
+          sale_date: '2024-01-19',
+          total_amount: 1800,
+          profit: 540,
+          items: [
+            { name: 'Smartphone X', quantity: 1, unit_price: 800, total: 800 },
+            { name: 'Tablet Air', quantity: 1, unit_price: 500, total: 500 }
+          ]
+        }
+      ];
+
+      // Mock data for stock items
+      const mockStockItems = [
+        { id: 1, name: 'Laptop Pro', qty: 15, selling_price: 1200, cost_price: 900 },
+        { id: 2, name: 'Smartphone X', qty: 25, selling_price: 800, cost_price: 600 },
+        { id: 3, name: 'Tablet Air', qty: 8, selling_price: 500, cost_price: 350 },
+        { id: 4, name: 'Wireless Headphones', qty: 30, selling_price: 150, cost_price: 90 },
+        { id: 5, name: 'Gaming Mouse', qty: 12, selling_price: 80, cost_price: 45 }
+      ];
+      
+      setSalesRecords(mockSalesRecords);
+      setStockItems(mockStockItems);
+      
+      // Calculate total sales
+      const totalAmount = mockSalesRecords.reduce((sum, sale) => sum + (sale.total_amount || 0), 0);
+      const totalProfit = mockSalesRecords.reduce((sum, sale) => sum + (sale.profit || 0), 0);
+      setTotalSales({ amount: totalAmount, profit: totalProfit });
+      
+    } catch (error) {
+      console.error('Error loading mock data:', error);
+      setSalesRecords([]);
+      setStockItems([]);
+      setTotalSales({ amount: 0, profit: 0 });
+    }
+  };
 
   // Refresh available inventory when stockItems changes
   useEffect(() => {
@@ -93,37 +165,13 @@ const SalesPlus = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const generateInvoiceNumber = () => {
-    const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 1000);
-    setInvoiceNumber(`INV-${timestamp}-${random}`);
-  };
-
-  const fetchAvailableInventory = useCallback(async () => {
-    try {
-      // Use the main inventory data that's already being managed by the parent
-      // This ensures consistency with the stocking system
-      console.log('Fetching available inventory from stockItems:', stockItems);
-      setAvailableInventory(stockItems || []);
-    } catch (error) {
-      console.error('Failed to fetch available inventory:', error);
-      setAvailableInventory([]);
-    }
-  }, [stockItems]);
-
   const refreshInventory = async () => {
     setIsRefreshing(true);
     try {
-      if (refreshData) {
-        await refreshData();
-        toast.success('Inventory refreshed successfully!');
-      } else {
-        // Fallback to direct API call if refreshData is not available
-        const invRes = await api.get('/api/inventory');
-        setStockItems(invRes.data || []);
-        setAvailableInventory(invRes.data || []);
-        toast.success('Inventory refreshed successfully!');
-      }
+      const invRes = await api.get('/api/inventory');
+      setStockItems(invRes.data || []);
+      setAvailableInventory(invRes.data || []);
+      toast.success('Inventory refreshed successfully!');
     } catch (error) {
       console.error('Failed to refresh inventory:', error);
       toast.error('Failed to refresh inventory');

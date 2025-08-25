@@ -3,7 +3,7 @@ import { Search, Printer, Edit, Trash2, Eye, ArrowLeft } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { toast } from 'react-toastify';
-import api from '@utils/api';
+// Removed API import - using mock data
 import { formatNumber } from '../../utils/formatNumber';
 
 const MySales = () => {

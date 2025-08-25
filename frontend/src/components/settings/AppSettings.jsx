@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Settings, Save, RefreshCw, Mail, MessageSquare, Bell } from 'lucide-react';
 import api from '@utils/api';
 import { toast } from 'react-toastify';
+import Dropdown from '../shared/Dropdown';
 
 const AppSettings = () => {
 
@@ -232,16 +233,17 @@ const AppSettings = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Default Currency
             </label>
-            <select
+            <Dropdown
+              options={[
+                { value: 'UGX', label: 'UGX (Ugandan Shilling)' },
+                { value: 'USD', label: 'USD (US Dollar)' },
+                { value: 'EUR', label: 'EUR (Euro)' },
+                { value: 'GBP', label: 'GBP (British Pound)' }
+              ]}
               value={formData.default_currency || 'UGX'}
-              onChange={(e) => handleInputChange('default_currency', e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="UGX">UGX (Ugandan Shilling)</option>
-              <option value="USD">USD (US Dollar)</option>
-              <option value="EUR">EUR (Euro)</option>
-              <option value="GBP">GBP (British Pound)</option>
-            </select>
+              onChange={(value) => handleInputChange('default_currency', value)}
+              placeholder="Select currency..."
+            />
             <p className="text-xs text-gray-500 mt-1">Default currency for transactions</p>
           </div>
 
@@ -298,15 +300,16 @@ const AppSettings = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Password Policy
             </label>
-            <select
+            <Dropdown
+              options={[
+                { value: 'low', label: 'Low (6+ characters)' },
+                { value: 'medium', label: 'Medium (8+ characters, mixed case)' },
+                { value: 'high', label: 'High (10+ characters, special chars)' }
+              ]}
               value={formData.password_policy || 'medium'}
-              onChange={(e) => handleInputChange('password_policy', e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="low">Low (6+ characters)</option>
-              <option value="medium">Medium (8+ characters, mixed case)</option>
-              <option value="high">High (10+ characters, special chars)</option>
-            </select>
+              onChange={(value) => handleInputChange('password_policy', value)}
+              placeholder="Select password policy..."
+            />
             <p className="text-xs text-gray-500 mt-1">Password strength requirements</p>
           </div>
 
@@ -314,14 +317,15 @@ const AppSettings = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Two-Factor Authentication
             </label>
-            <select
+            <Dropdown
+              options={[
+                { value: 'true', label: 'Enabled' },
+                { value: 'false', label: 'Disabled' }
+              ]}
               value={formData.two_factor_auth || 'false'}
-              onChange={(e) => handleInputChange('two_factor_auth', e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="true">Enabled</option>
-              <option value="false">Disabled</option>
-            </select>
+              onChange={(value) => handleInputChange('two_factor_auth', value)}
+              placeholder="Select 2FA setting..."
+            />
             <p className="text-xs text-gray-500 mt-1">Require 2FA for admin accounts</p>
           </div>
 
@@ -389,14 +393,15 @@ const AppSettings = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Email Notifications
             </label>
-            <select
+            <Dropdown
+              options={[
+                { value: 'true', label: 'Enabled' },
+                { value: 'false', label: 'Disabled' }
+              ]}
               value={formData.email_notifications || 'true'}
-              onChange={(e) => handleInputChange('email_notifications', e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="true">Enabled</option>
-              <option value="false">Disabled</option>
-            </select>
+              onChange={(value) => handleInputChange('email_notifications', value)}
+              placeholder="Select notification setting..."
+            />
             <p className="text-xs text-gray-500 mt-1">Enable email notifications for important events</p>
           </div>
 
@@ -404,14 +409,15 @@ const AppSettings = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               WhatsApp Integration
             </label>
-            <select
+            <Dropdown
+              options={[
+                { value: 'true', label: 'Enabled' },
+                { value: 'false', label: 'Disabled' }
+              ]}
               value={formData.whatsapp_integration || 'false'}
-              onChange={(e) => handleInputChange('whatsapp_integration', e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="true">Enabled</option>
-              <option value="false">Disabled</option>
-            </select>
+              onChange={(value) => handleInputChange('whatsapp_integration', value)}
+              placeholder="Select WhatsApp setting..."
+            />
             <p className="text-xs text-gray-500 mt-1">Enable WhatsApp integration for customer communications</p>
           </div>
 
@@ -419,14 +425,15 @@ const AppSettings = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Auto Backup
             </label>
-            <select
+            <Dropdown
+              options={[
+                { value: 'true', label: 'Enabled' },
+                { value: 'false', label: 'Disabled' }
+              ]}
               value={formData.auto_backup_enabled || 'true'}
-              onChange={(e) => handleInputChange('auto_backup_enabled', e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="true">Enabled</option>
-              <option value="false">Disabled</option>
-            </select>
+              onChange={(value) => handleInputChange('auto_backup_enabled', value)}
+              placeholder="Select backup setting..."
+            />
             <p className="text-xs text-gray-500 mt-1">Enable automatic database backups</p>
           </div>
         </div>

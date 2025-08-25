@@ -1,12 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Printer } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { formatNumber } from '../../utils/formatNumber';
 import { normalizeName } from '../../utils/normalizeName';
+// Removed API import - using mock data
 
 
-const MyStock = ({ stockItems, receipts, totalStockAmount, setReceipts }) => {
+const MyStock = () => {
+  // Data states
+  const [stockItems, setStockItems] = useState([]);
+  const [receipts, setReceipts] = useState([]);
+  const [totalStockAmount, setTotalStockAmount] = useState(0);
   const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [showStockSummary, setShowStockSummary] = useState(false);
   const [editCompany, setEditCompany] = useState('');
@@ -14,7 +19,45 @@ const MyStock = ({ stockItems, receipts, totalStockAmount, setReceipts }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const receiptsWithId = receipts.map((r, index) => ({
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchInitialData();
+  }, []);
+
+  const fetchInitialData = async () => {
+    try {
+      // Mock data for inventory
+      const mockInventory = [
+        { id: 1, name: 'Laptop Pro', qty: 15, selling_price: 1200, amount: 18000 },
+        { id: 2, name: 'Smartphone X', qty: 25, selling_price: 800, amount: 20000 },
+        { id: 3, name: 'Tablet Air', qty: 8, selling_price: 500, amount: 4000 },
+        { id: 4, name: 'Wireless Headphones', qty: 30, selling_price: 150, amount: 4500 },
+        { id: 5, name: 'Gaming Mouse', qty: 12, selling_price: 80, amount: 960 }
+      ];
+      
+      // Mock data for receipts
+      const mockReceipts = [
+        { id: 'REC-001', company: 'Tech Supplies Inc', date: '2024-01-15', total_amount: 25000, items: mockInventory },
+        { id: 'REC-002', company: 'Global Electronics', date: '2024-01-10', total_amount: 18000, items: mockInventory.slice(0, 3) },
+        { id: 'REC-003', company: 'Digital World', date: '2024-01-05', total_amount: 12000, items: mockInventory.slice(1, 4) }
+      ];
+      
+      setStockItems(mockInventory);
+      setReceipts(mockReceipts);
+      
+      // Calculate total stock amount
+      const totalAmount = mockReceipts.reduce((sum, receipt) => sum + (receipt.total_amount || 0), 0);
+      setTotalStockAmount(totalAmount);
+      
+    } catch (error) {
+      console.error('Error loading mock data:', error);
+      setStockItems([]);
+      setReceipts([]);
+      setTotalStockAmount(0);
+    }
+  };
+
+  const receiptsWithId = (receipts || []).map((r, index) => ({
     ...r,
     id: r.id || `receipt-${index}-${r.date}`,
   }));

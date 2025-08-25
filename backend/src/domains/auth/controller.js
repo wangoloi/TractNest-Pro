@@ -20,7 +20,8 @@ export async function loginController(req, res) {
     sameSite: isProd ? 'none' : 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000
   });
-  res.json({ user });
+  // Also include token in response for frontend access
+  res.json({ user: { ...user, token } });
 }
 
 export async function logoutController(req, res) {

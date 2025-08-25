@@ -11,8 +11,11 @@ import ProtectedRoute from '../components/auth/ProtectedRoute';
 
 // Main Components
 import Dashboard from '../components/dashboard/Dashboard';
+<<<<<<< HEAD
 import Inventory from '../components/inventory/Inventory';
 import Receipts from '../components/receipts/Receipts';
+=======
+>>>>>>> 10343382ae11e45544ef657d05391aed8a6c8eb9
 import MySales from '../components/sales/MySales';
 import SalesPlus from '../components/sales/SalesPlus';
 import MyStock from '../components/stocking/MyStock';
@@ -21,12 +24,22 @@ import Statements from '../pages/Statements';
 import Notifications from '../pages/Notifications';
 import ContactForm from '../components/contact/ContactForm';
 import CustomerList from '../components/customers/CustomerList';
+<<<<<<< HEAD
 import CustomerMessages from '../components/messages/CustomerMessages';
+=======
+import Messages from '../components/messages/CustomerMessages';
+>>>>>>> 10343382ae11e45544ef657d05391aed8a6c8eb9
 import AppSettings from '../components/settings/AppSettings';
 
 // Admin Components
 import UserManagement from '../components/admin/UserManagement';
 
+<<<<<<< HEAD
+=======
+// Owner Components
+import OrganizationsManagement from '../components/owner/OrganizationsManagement';
+
+>>>>>>> 10343382ae11e45544ef657d05391aed8a6c8eb9
 const AppRoutes = ({ stockItems }) => {
   return (
     <Routes>
@@ -53,6 +66,7 @@ const AppRoutes = ({ stockItems }) => {
         <Route path="notifications" element={<Notifications />} />
         
         {/* Admin-only routes */}
+<<<<<<< HEAD
         <Route path="contact" element={
           <ProtectedRoute adminOnly={true}>
             <ContactForm />
@@ -71,6 +85,13 @@ const AppRoutes = ({ stockItems }) => {
         <Route path="settings" element={
           <ProtectedRoute adminOnly={true}>
             <AppSettings />
+=======
+        <Route path="messages" element={<Messages />} />
+
+        <Route path="users" element={
+          <ProtectedRoute adminOnly={true}>
+            <UserManagement />
+>>>>>>> 10343382ae11e45544ef657d05391aed8a6c8eb9
           </ProtectedRoute>
         } />
         <Route path="admin/users" element={
@@ -78,6 +99,39 @@ const AppRoutes = ({ stockItems }) => {
             <UserManagement />
           </ProtectedRoute>
         } />
+<<<<<<< HEAD
+=======
+        
+        {/* Owner-only routes */}
+        <Route path="organizations" element={
+          <ProtectedRoute ownerOnly={true}>
+            <OrganizationsManagement />
+          </ProtectedRoute>
+        } />
+        <Route path="enterprise-users" element={
+          <ProtectedRoute ownerOnly={true}>
+            <div className="p-6">
+              <h1 className="text-3xl font-bold text-gray-900">Enterprise Users Management</h1>
+              <p className="text-gray-600">Manage users across all organizations</p>
+              <div className="mt-6 p-8 bg-gray-50 rounded-lg text-center">
+                <p className="text-gray-500">Enterprise Users Management coming soon...</p>
+              </div>
+            </div>
+          </ProtectedRoute>
+        } />
+
+        <Route path="enterprise-analytics" element={
+          <ProtectedRoute ownerOnly={true}>
+            <div className="p-6">
+              <h1 className="text-3xl font-bold text-gray-900">Enterprise Analytics</h1>
+              <p className="text-gray-600">View analytics across all organizations</p>
+              <div className="mt-6 p-8 bg-gray-50 rounded-lg text-center">
+                <p className="text-gray-500">Enterprise Analytics coming soon...</p>
+              </div>
+            </div>
+          </ProtectedRoute>
+        } />
+>>>>>>> 10343382ae11e45544ef657d05391aed8a6c8eb9
       </Route>
       
       {/* Catch all route */}

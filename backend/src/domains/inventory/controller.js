@@ -4,6 +4,7 @@ export async function listInventoryController(req, res) {
   try {
     const organizationId = req.user?.organization_id || 1;
     const items = await service.listInventory(organizationId);
+    console.log(items, 'items in listInventoryController');
     res.json(items);
   } catch (error) {
     console.error('Error listing inventory:', error);

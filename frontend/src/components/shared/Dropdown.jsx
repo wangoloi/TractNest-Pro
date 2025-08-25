@@ -1,32 +1,46 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Search, Check, X } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { ChevronDown, Search, Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Dropdown = ({
   options = [],
   value,
   onChange,
-  placeholder = 'Select an option',
-  searchable = false,
-  multiSelect = false,
+  placeholder = 'Select an option...',
+  searchable = true,
   disabled = false,
   className = '',
   size = 'md',
   error = false,
-  label,
-  required = false
+  loading = false,
+  multiple = false,
+  maxHeight = '200px'
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedValues, setSelectedValues] = useState(multiSelect ? (Array.isArray(value) ? value : []) : []);
+  const [selectedItems, setSelectedItems] = useState(multiple ? (value || []) : []);
   const dropdownRef = useRef(null);
+  const searchRef = useRef(null);
 
+  // Size classes
   const sizeClasses = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-sm',
-    lg: 'px-4 py-3 text-base'
+    sm: 'text-sm px-3 py-2',
+    md: 'text-sm px-4 py-2.5',
+    lg: 'text-base px-4 py-3'
   };
 
-  // Close dropdown when clicking outside
+  // Filter options based on search term
+  const filteredOptions = options.filter(option => {
+    if (!searchable || !searchTerm) return true;
+    const searchLower = searchTerm.toLowerCase();
+    const label = typeof option === 'string' ? option : option.label || option.name || option.value;
+    const value = typeof option === 'string' ? option : option.value;
+    
+    return label.toLowerCase().includes(searchLower) || 
+           value.toString().toLowerCase().includes(searchLower);
+  });
+
+  // Handle click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -39,203 +53,172 @@ const Dropdown = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Update selected values when value prop changes
+  // Focus search input when dropdown opens
   useEffect(() => {
-    if (multiSelect) {
-      setSelectedValues(Array.isArray(value) ? value : []);
+    if (isOpen && searchable && searchRef.current) {
+      setTimeout(() => searchRef.current?.focus(), 100);
     }
-  }, [value, multiSelect]);
+  }, [isOpen, searchable]);
 
-  // Filter options based on search term
-  const filteredOptions = options.filter(option =>
-    option.label.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Update selected items when value prop changes
+  useEffect(() => {
+    if (multiple) {
+      setSelectedItems(value || []);
+    }
+  }, [value, multiple]);
 
-  // Handle option selection
-  const handleOptionSelect = (option) => {
-    if (multiSelect) {
-      const newValues = selectedValues.includes(option.value)
-        ? selectedValues.filter(v => v !== option.value)
-        : [...selectedValues, option.value];
+  const handleToggle = () => {
+    if (!disabled && !loading) {
+      setIsOpen(!isOpen);
+      if (!isOpen) {
+        setSearchTerm('');
+      }
+    }
+  };
+
+  const handleSelect = useCallback((option) => {
+    const optionValue = typeof option === 'string' ? option : option.value;
+    const optionLabel = typeof option === 'string' ? option : option.label || option.name || option.value;
+
+    if (multiple) {
+      const newSelectedItems = selectedItems.includes(optionValue)
+        ? selectedItems.filter(item => item !== optionValue)
+        : [...selectedItems, optionValue];
       
-      setSelectedValues(newValues);
-      onChange?.(newValues);
+      setSelectedItems(newSelectedItems);
+      onChange?.(newSelectedItems);
     } else {
-      onChange?.(option.value);
+      onChange?.(optionValue, option);
       setIsOpen(false);
       setSearchTerm('');
     }
-  };
+  }, [multiple, selectedItems, onChange]);
 
-  // Handle remove selected item (multi-select)
-  const handleRemoveItem = (valueToRemove) => {
-    const newValues = selectedValues.filter(v => v !== valueToRemove);
-    setSelectedValues(newValues);
-    onChange?.(newValues);
-  };
-
-  // Get display value
   const getDisplayValue = () => {
-    if (multiSelect) {
-      if (selectedValues.length === 0) return placeholder;
-      if (selectedValues.length === 1) {
-        const option = options.find(opt => opt.value === selectedValues[0]);
-        return option?.label || selectedValues[0];
+    if (multiple) {
+      if (selectedItems.length === 0) return placeholder;
+      if (selectedItems.length === 1) {
+        const option = options.find(opt => {
+          const optValue = typeof opt === 'string' ? opt : opt.value;
+          return optValue === selectedItems[0];
+        });
+        return typeof option === 'string' ? option : option?.label || option?.name || option?.value;
       }
-      return `${selectedValues.length} items selected`;
+      return `${selectedItems.length} items selected`;
     } else {
-      const option = options.find(opt => opt.value === value);
-      return option?.label || placeholder;
+      if (!value) return placeholder;
+      const option = options.find(opt => {
+        const optValue = typeof opt === 'string' ? opt : opt.value;
+        return optValue === value;
+      });
+      return typeof option === 'string' ? option : option?.label || option?.name || option?.value;
     }
   };
 
-  // Check if option is selected
-  const isSelected = (optionValue) => {
-    if (multiSelect) {
-      return selectedValues.includes(optionValue);
+  const isSelected = (option) => {
+    const optionValue = typeof option === 'string' ? option : option.value;
+    if (multiple) {
+      return selectedItems.includes(optionValue);
     }
     return value === optionValue;
   };
 
   return (
-    <div className={`relative ${className}`}>
-      {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
-        </label>
-      )}
-      
-      <div ref={dropdownRef} className="relative">
-        <button
-          type="button"
-          onClick={() => !disabled && setIsOpen(!isOpen)}
-          disabled={disabled}
-          className={`
-            w-full flex items-center justify-between border rounded-lg transition-colors
-            ${sizeClasses[size]}
-            ${disabled 
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-              : 'bg-white text-gray-900 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none'
-            }
-            ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}
-          `}
-        >
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            {multiSelect && selectedValues.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {selectedValues.slice(0, 2).map(val => {
-                  const option = options.find(opt => opt.value === val);
-                  return (
-                    <span
-                      key={val}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded-md"
-                    >
-                      {option?.label || val}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveItem(val);
-                        }}
-                        className="hover:bg-blue-200 rounded-full p-0.5"
-                      >
-                        <X size={12} />
-                      </button>
-                    </span>
-                  );
-                })}
-                {selectedValues.length > 2 && (
-                  <span className="text-xs text-gray-500">
-                    +{selectedValues.length - 2} more
-                  </span>
-                )}
-              </div>
-            )}
-            {(!multiSelect || selectedValues.length === 0) && (
-              <span className={`truncate ${!value && !multiSelect ? 'text-gray-500' : ''}`}>
-                {getDisplayValue()}
-              </span>
-            )}
-          </div>
-          <ChevronDown 
-            size={16} 
-            className={`text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
-          />
-        </button>
+    <div className={`relative ${className}`} ref={dropdownRef}>
+      {/* Main button */}
+      <button
+        type="button"
+        onClick={handleToggle}
+        disabled={disabled || loading}
+        className={`
+          w-full flex items-center justify-between rounded-lg border transition-all duration-200
+          ${sizeClasses[size]}
+          ${disabled || loading 
+            ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+            : 'bg-white text-gray-900 cursor-pointer hover:border-green-500 focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:ring-opacity-20'
+          }
+          ${error ? 'border-red-500' : 'border-gray-300'}
+          ${isOpen ? 'border-green-500 ring-2 ring-green-500 ring-opacity-20' : ''}
+        `}
+      >
+        <span className={`truncate ${!value && !selectedItems.length ? 'text-gray-500' : ''}`}>
+          {loading ? 'Loading...' : getDisplayValue()}
+        </span>
+        <ChevronDown 
+          size={16} 
+          className={`ml-2 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
 
+      {/* Dropdown menu */}
+      <AnimatePresence>
         {isOpen && (
-          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-hidden">
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
+          >
+            {/* Search input */}
             {searchable && (
-              <div className="p-2 border-b border-gray-200">
+              <div className="p-2 border-b border-gray-100">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                  <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <input
+                    ref={searchRef}
                     type="text"
-                    placeholder="Search options..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    autoFocus
+                    placeholder="Search options..."
+                    className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   />
                 </div>
               </div>
             )}
 
-            <div className="max-h-48 overflow-y-auto">
+            {/* Options list */}
+            <div 
+              className="overflow-y-auto"
+              style={{ maxHeight }}
+            >
               {filteredOptions.length > 0 ? (
-                filteredOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => handleOptionSelect(option)}
-                    className={`
-                      w-full flex items-center justify-between px-4 py-2 text-left text-sm transition-colors
-                      ${isSelected(option.value)
-                        ? 'bg-blue-50 text-blue-900'
-                        : 'text-gray-900 hover:bg-gray-50'
-                      }
-                      ${option.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                    `}
-                    disabled={option.disabled}
-                  >
-                    <span className="truncate">{option.label}</span>
-                    {isSelected(option.value) && (
-                      <Check size={16} className="text-blue-600 flex-shrink-0" />
-                    )}
-                  </button>
-                ))
+                filteredOptions.map((option, index) => {
+                  const optionValue = typeof option === 'string' ? option : option.value;
+                  const optionLabel = typeof option === 'string' ? option : option.label || option.name || option.value;
+                  const selected = isSelected(option);
+
+                  return (
+                    <button
+                      key={optionValue}
+                      type="button"
+                      onClick={() => handleSelect(option)}
+                      className={`
+                        w-full flex items-center justify-between px-4 py-2 text-left text-sm transition-colors
+                        ${selected 
+                          ? 'bg-green-50 text-green-700 border-l-4 border-green-500' 
+                          : 'hover:bg-gray-50 text-gray-900'
+                        }
+                        ${multiple ? 'border-l-4' : ''}
+                        ${selected && !multiple ? 'border-l-4 border-green-500' : ''}
+                      `}
+                    >
+                      <span className="truncate">{optionLabel}</span>
+                      {selected && (
+                        <Check size={16} className="text-green-600 flex-shrink-0 ml-2" />
+                      )}
+                    </button>
+                  );
+                })
               ) : (
                 <div className="px-4 py-3 text-sm text-gray-500 text-center">
                   {searchTerm ? 'No options found' : 'No options available'}
                 </div>
               )}
             </div>
-
-            {multiSelect && selectedValues.length > 0 && (
-              <div className="p-2 border-t border-gray-200 bg-gray-50">
-                <div className="flex items-center justify-between text-xs text-gray-600">
-                  <span>{selectedValues.length} selected</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedValues([]);
-                      onChange?.([]);
-                    }}
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    Clear all
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+          </motion.div>
         )}
-      </div>
-
-      {error && (
-        <p className="mt-1 text-sm text-red-600">{error}</p>
-      )}
+      </AnimatePresence>
     </div>
   );
 };

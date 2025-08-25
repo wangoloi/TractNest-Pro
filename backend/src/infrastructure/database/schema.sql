@@ -199,12 +199,21 @@ CREATE INDEX idx_app_settings_organization ON app_settings(organization_id);
 
 use tracknest;
 
+<<<<<<< HEAD
+=======
+DROP DATABASE IF EXISTS tracknest;
+
+>>>>>>> 10343382ae11e45544ef657d05391aed8a6c8eb9
 
 SHOW TABLES;
 
 DESC users;
 
+<<<<<<< HEAD
 SELECT * FROM inventory_items;
+=======
+SELECT * FROM customers;
+>>>>>>> 10343382ae11e45544ef657d05391aed8a6c8eb9
 
 
 

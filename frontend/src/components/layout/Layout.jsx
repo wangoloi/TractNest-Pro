@@ -17,12 +17,12 @@ const Layout = ({ stockItems }) => {
     '/my-sales': 'MySales',
     '/statements': 'Statements',
     '/notifications': 'Notifications',
-    '/contact': 'Contact',
-    '/customers': 'Customers',
+    '/users': 'Users',
     '/messages': 'Messages',
-    '/settings': 'Settings',
-    '/admin': 'Admin Dashboard',
-    '/admin/users': 'User Management'
+    '/admin/users': 'Users',
+    '/organizations': 'Organizations',
+    '/enterprise-users': 'EnterpriseUsers',
+    '/enterprise-analytics': 'EnterpriseAnalytics'
   };
 
   const getCurrentTab = () => {
@@ -38,12 +38,11 @@ const Layout = ({ stockItems }) => {
       'MySales': '/my-sales',
       'Statements': '/statements',
       'Notifications': '/notifications',
-      'Contact': '/contact',
-      'Customers': '/customers',
+      'Users': '/users',
       'Messages': '/messages',
-      'Settings': '/settings',
-      'Admin Dashboard': '/admin',
-      'User Management': '/admin/users'
+      'Organizations': '/organizations',
+      'EnterpriseUsers': '/enterprise-users',
+      'EnterpriseAnalytics': '/enterprise-analytics'
     };
     
     const route = tabToRouteMap[tab] || '/';
@@ -56,9 +55,9 @@ const Layout = ({ stockItems }) => {
 
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Sidebar */}
-      <div className={`bg-white shadow-md transition-all duration-300 ${isSidebarCollapsed ? 'w-20' : 'w-64'}`}>
+      <div className={`bg-white shadow-md transition-all duration-300 flex-shrink-0 ${isSidebarCollapsed ? 'w-20' : 'w-64'}`}>
         <div className="p-4 border-b flex items-center justify-between">
           {!isSidebarCollapsed && (
             <h1 className="text-xl font-bold text-green-700">TrackNest Pro</h1>
@@ -66,7 +65,7 @@ const Layout = ({ stockItems }) => {
           <div className="flex items-center gap-2">
             <button
               onClick={toggleSidebar}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none"
             >
               {isSidebarCollapsed ? (
                 <Menu className="text-gray-600" size={24} />

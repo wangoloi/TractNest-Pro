@@ -3,17 +3,31 @@ import config from './config.js';
 
 const api = axios.create({
   baseURL: config.api.baseURL,
-  timeout: config.api.timeout,
+  // timeout: config.api.timeout,
   withCredentials: true
 });
 
-// Add request interceptor for debugging
+// Add request interceptor for debugging and authentication
 api.interceptors.request.use(
   (config) => {
+    // Add authentication token if available
+    const userData = localStorage.getItem('userData');
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        if (user.token) {
+          config.headers.Authorization = `Bearer ${user.token}`;
+        }
+      } catch (error) {
+        console.warn('⚠️ Failed to parse user data for auth:', error);
+      }
+    }
+    
     console.log('🚀 API Request:', {
       method: config.method?.toUpperCase(),
       url: config.url,
-      baseURL: config.baseURL
+      baseURL: config.baseURL,
+      hasAuth: !!config.headers.Authorization
     });
     return config;
   },
@@ -32,7 +46,7 @@ api.interceptors.response.use(
     }
     
     // Handle different HTTP status codes
-    const status = error.response.status;
+    const status = error.response?.status;
     let message = error?.response?.data?.message || error.message || 'Request failed';
     
     switch (status) {

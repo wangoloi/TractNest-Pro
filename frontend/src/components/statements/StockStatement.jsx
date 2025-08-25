@@ -49,6 +49,12 @@ const StockStatement = ({ receipts, timePeriod, customStartDate, customEndDate }
 
   // Filter receipts based on date range
   useEffect(() => {
+    if (!receipts || !Array.isArray(receipts)) {
+      setFilteredReceipts([]);
+      setTotalStockValue(0);
+      return;
+    }
+
     const { startDate, endDate } = getDateRange();
     
     // Filter receipts by date range
@@ -60,7 +66,7 @@ const StockStatement = ({ receipts, timePeriod, customStartDate, customEndDate }
     setFilteredReceipts(filtered);
     
     // Calculate total stock value for the period
-    const totalValue = filtered.reduce((sum, receipt) => sum + receipt.total, 0);
+    const totalValue = filtered.reduce((sum, receipt) => sum + (receipt.total || 0), 0);
     setTotalStockValue(totalValue);
   }, [receipts, getDateRange]);
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MessageSquare, Send, Users, Search, AlertCircle } from 'lucide-react';
 import api from '@utils/api';
 import { toast } from 'react-toastify';
+import Dropdown from '../shared/Dropdown';
 
 const ContactForm = () => {
   const [customers, setCustomers] = useState([]);
@@ -218,33 +219,35 @@ const ContactForm = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Message Type
               </label>
-              <select
+              <Dropdown
+                options={[
+                  { value: 'notification', label: 'Notification' },
+                  { value: 'update', label: 'Update' },
+                  { value: 'reminder', label: 'Reminder' },
+                  { value: 'support', label: 'Support' },
+                  { value: 'promotion', label: 'Promotion' }
+                ]}
                 value={formData.messageType}
-                onChange={(e) => setFormData({...formData, messageType: e.target.value})}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="notification">Notification</option>
-                <option value="update">Update</option>
-                <option value="reminder">Reminder</option>
-                <option value="support">Support</option>
-                <option value="promotion">Promotion</option>
-              </select>
+                onChange={(value) => setFormData({...formData, messageType: value})}
+                placeholder="Select message type..."
+              />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Priority
               </label>
-              <select
+              <Dropdown
+                options={[
+                  { value: 'low', label: 'Low' },
+                  { value: 'medium', label: 'Medium' },
+                  { value: 'high', label: 'High' },
+                  { value: 'urgent', label: 'Urgent' }
+                ]}
                 value={formData.priority}
-                onChange={(e) => setFormData({...formData, priority: e.target.value})}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
-              </select>
+                onChange={(value) => setFormData({...formData, priority: value})}
+                placeholder="Select priority..."
+              />
             </div>
 
             <div>

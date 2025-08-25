@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, Filter, Download, MoreHorizontal } from 'lucide-react';
+import Dropdown from './Dropdown';
 
 const DataTable = ({
   data = [],
@@ -21,18 +22,35 @@ const DataTable = ({
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [showFiltersPanel, setShowFiltersPanel] = useState(false);
+  const [filters, setFilters] = useState({});
 
-  // Filter data based on search term
+  // Filter data based on search term and filters
   const filteredData = useMemo(() => {
-    if (!searchTerm) return data;
+    let filtered = data;
     
-    return data.filter(item =>
-      columns.some(column => {
-        const value = column.accessor ? column.accessor(item) : item[column.key];
-        return value?.toString().toLowerCase().includes(searchTerm.toLowerCase());
-      })
-    );
-  }, [data, searchTerm, columns]);
+    // Apply search term filter
+    if (searchTerm) {
+      filtered = filtered.filter(item =>
+        columns.some(column => {
+          const value = column.accessor ? column.accessor(item) : item[column.key];
+          return value?.toString().toLowerCase().includes(searchTerm.toLowerCase());
+        })
+      );
+    }
+    
+    // Apply column filters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && value.trim()) {
+        filtered = filtered.filter(item => {
+          const column = columns.find(col => col.key === key);
+          const itemValue = column?.accessor ? column.accessor(item) : item[key];
+          return itemValue?.toString().toLowerCase().includes(value.toLowerCase());
+        });
+      }
+    });
+    
+    return filtered;
+  }, [data, searchTerm, columns, filters]);
 
   // Sort data
   const sortedData = useMemo(() => {
@@ -191,10 +209,23 @@ const DataTable = ({
                 <input
                   type="text"
                   placeholder={`Filter ${column.header}...`}
+                  value={filters[column.key] || ''}
+                  onChange={(e) => setFilters(prev => ({
+                    ...prev,
+                    [column.key]: e.target.value
+                  }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
             ))}
+          </div>
+          <div className="flex justify-end mt-4">
+            <button
+              onClick={() => setFilters({})}
+              className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+            >
+              Clear Filters
+            </button>
           </div>
         </div>
       )}
@@ -286,18 +317,15 @@ const DataTable = ({
             </span>
             <div className="flex items-center gap-2">
               <span>Rows per page:</span>
-              <select
+              <Dropdown
+                options={pageSizeOptions.map(size => ({ value: size, label: size.toString() }))}
                 value={rowsPerPage}
-                onChange={(e) => {
-                  setRowsPerPage(Number(e.target.value));
+                onChange={(value) => {
+                  setRowsPerPage(Number(value));
                   setCurrentPage(1);
                 }}
-                className="border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                {pageSizeOptions.map(size => (
-                  <option key={size} value={size}>{size}</option>
-                ))}
-              </select>
+                size="sm"
+              />
             </div>
           </div>
           

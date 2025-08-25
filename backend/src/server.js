@@ -15,6 +15,7 @@ import { authRoutes } from './domains/auth/routes.js';
 import { customerRoutes } from './domains/customers/routes.js';
 import { messageRoutes } from './domains/messages/routes.js';
 import { settingsRoutes } from './domains/settings/routes.js';
+import { adminRoutes } from './domains/admin/routes.js';
 
 const app = express();
 
@@ -30,6 +31,18 @@ app.use(requestLogger);
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
+// Test endpoint
+app.get('/api/test', (req, res) => res.json({ 
+  message: 'API is working!', 
+  timestamp: new Date().toISOString(),
+  endpoints: {
+    health: '/health',
+    admin: '/api/admin',
+    inventory: '/api/inventory',
+    sales: '/api/sales'
+  }
+}));
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/inventory/public', publicInventoryRoutes); // Public inventory routes (no auth)
@@ -40,6 +53,7 @@ app.use('/api/invoices', invoicesRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Error handling
 app.use(notFoundHandler);

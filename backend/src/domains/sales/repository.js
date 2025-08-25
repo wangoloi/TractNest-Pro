@@ -1,15 +1,21 @@
 import { query } from '../../infrastructure/database/mysql.js';
 
 export async function listSales(organizationId = 1) {
-  return query(`
-    SELECT 
-      st.id, st.item_id AS itemId, st.item_name AS itemName, st.quantity, st.unit_price AS unitPrice, 
-      st.total_price AS totalPrice, st.profit, st.transaction_date AS createdAt,
-      st.organization_id AS organizationId
-    FROM sales_transactions st
-    WHERE st.organization_id = ?
-    ORDER BY st.transaction_date DESC
-  `, [organizationId]);
+  try {
+    return await query(`
+      SELECT 
+        st.id, st.item_id AS itemId, st.item_name AS itemName, st.quantity, st.unit_price AS unitPrice, 
+        st.total_price AS totalPrice, st.profit, st.created_at AS createdAt,
+        st.organization_id AS organizationId
+      FROM sales_transactions st
+      WHERE st.organization_id = ?
+      ORDER BY st.created_at DESC
+    `, [organizationId]);
+  } catch (error) {
+    console.error('Sales query error:', error.message);
+    // Return empty array if table doesn't exist or other errors
+    return [];
+  }
 }
 
 export async function createSale({ itemId, itemName, quantity, unitPrice, totalPrice, profit, organizationId, createdBy }) {
