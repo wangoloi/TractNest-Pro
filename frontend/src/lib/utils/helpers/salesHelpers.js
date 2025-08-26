@@ -4,7 +4,7 @@ export const generateReceiptNumber = () => {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  return `RCP-${year}${month}${day}-${random}`;
+  return `${random}`;
 };
 
 export const calculateSaleTotal = (items, discount = 0, tax = 0) => {

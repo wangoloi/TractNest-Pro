@@ -9,6 +9,7 @@ const StockForm = ({ onSave, onCancel, existingItem = null }) => {
     quantity: existingItem?.quantity || 0,
     price: existingItem?.price || 0,
     cost: existingItem?.cost || 0,
+    invoiceNumber: existingItem?.invoiceNumber || "",
     supplier: existingItem?.supplier || "",
     supplierPhone: existingItem?.supplierPhone || "",
     supplierEmail: existingItem?.supplierEmail || "",
@@ -132,7 +133,22 @@ const StockForm = ({ onSave, onCancel, existingItem = null }) => {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
           Stock & Pricing
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Invoice Number
+            </label>
+            <input
+              type="text"
+              value={formData.invoiceNumber}
+              onChange={(e) =>
+                handleInputChange("invoiceNumber", e.target.value)
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter invoice number (optional)"
+            />
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Quantity *
@@ -151,7 +167,9 @@ const StockForm = ({ onSave, onCancel, existingItem = null }) => {
               <p className="text-red-500 text-sm mt-1">{errors.quantity}</p>
             )}
           </div>
+        </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Selling Price (UGX) *

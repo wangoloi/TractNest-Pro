@@ -8,15 +8,32 @@ export const useSalesManager = () => {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState("sales"); // 'sales' or 'inventory'
 
-  // Generate auto-incremented receipt number
+  // Generate sequential receipt number
   const generateReceiptNumber = () => {
+    // Get existing sales from localStorage or use empty array
+    const existingSales = JSON.parse(localStorage.getItem("sales") || "[]");
+
+    // Get today's date
     const currentDate = new Date();
     const year = currentDate.getFullYear();
     const month = String(currentDate.getMonth() + 1).padStart(2, "0");
     const day = String(currentDate.getDate()).padStart(2, "0");
-    const timestamp = Date.now();
-    const sequence = String(timestamp % 10000).padStart(4, "0");
-    return `RCP-${year}${month}${day}-${sequence}`;
+    const dateString = `${year}${month}${day}`;
+
+    // Filter sales for today
+    const todaySales = existingSales.filter((sale) => {
+      const saleDate = new Date(sale.date);
+      const saleDateString = `${saleDate.getFullYear()}${String(
+        saleDate.getMonth() + 1
+      ).padStart(2, "0")}${String(saleDate.getDate()).padStart(2, "0")}`;
+      return saleDateString === dateString;
+    });
+
+    // Get the next sequence number
+    const nextSequence = todaySales.length + 1;
+    const sequence = String(nextSequence).padStart(4, "0");
+
+    return `${sequence}`;
   };
 
   useEffect(() => {
@@ -28,7 +45,12 @@ export const useSalesManager = () => {
       setLoading(true);
       // Simulate API call delay
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      setSales(mockSales);
+
+      // Load sales from localStorage or use mock data
+      const savedSales = localStorage.getItem("sales");
+      const salesData = savedSales ? JSON.parse(savedSales) : mockSales;
+      setSales(salesData);
+
       setInventory(mockInventory);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -57,6 +79,8 @@ export const useSalesManager = () => {
         }, 0),
       };
       setSales(updatedSales);
+      // Update localStorage
+      localStorage.setItem("sales", JSON.stringify(updatedSales));
       toast.success("Sale updated successfully!");
     } else {
       // Create new sale
@@ -72,7 +96,10 @@ export const useSalesManager = () => {
 
       // Update inventory based on sale
       updateInventoryFromSale(saleData.items);
-      setSales([sale, ...sales]);
+      const newSales = [sale, ...sales];
+      setSales(newSales);
+      // Update localStorage
+      localStorage.setItem("sales", JSON.stringify(newSales));
       toast.success("Sale completed successfully! Stock updated.");
     }
   };

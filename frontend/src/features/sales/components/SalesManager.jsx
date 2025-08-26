@@ -51,6 +51,7 @@ const SalesManager = () => {
   // Filter states
   const [statusFilter, setStatusFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [inventoryStatusFilter, setInventoryStatusFilter] = useState("");
 
   const handleViewReceipt = (sale) => {
     setSelectedSale(sale);
@@ -97,10 +98,17 @@ const SalesManager = () => {
       );
     }
 
-    if (view === "inventory" && categoryFilter) {
-      filteredData = filteredData.filter(
-        (item) => item.category === categoryFilter
-      );
+    if (view === "inventory") {
+      if (categoryFilter) {
+        filteredData = filteredData.filter(
+          (item) => item.category === categoryFilter
+        );
+      }
+      if (inventoryStatusFilter) {
+        filteredData = filteredData.filter(
+          (item) => item.status === inventoryStatusFilter
+        );
+      }
     }
 
     return filteredData;
@@ -124,6 +132,13 @@ const SalesManager = () => {
         label: category,
       })
     ),
+  ];
+
+  const inventoryStatusOptions = [
+    { value: "", label: "All Statuses" },
+    { value: "in-stock", label: "In Stock" },
+    { value: "low-stock", label: "Low Stock" },
+    { value: "out-of-stock", label: "Out of Stock" },
   ];
 
   // Helper function to format items for display
@@ -554,18 +569,32 @@ const SalesManager = () => {
             </div>
           )}
           {view === "inventory" && (
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Filter by Category
-              </label>
-              <Dropdown
-                options={categoryOptions}
-                value={categoryFilter}
-                onChange={setCategoryFilter}
-                placeholder="Select category"
-                searchable={true}
-              />
-            </div>
+            <>
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Filter by Category
+                </label>
+                <Dropdown
+                  options={categoryOptions}
+                  value={categoryFilter}
+                  onChange={setCategoryFilter}
+                  placeholder="Select category"
+                  searchable={true}
+                />
+              </div>
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Filter by Status
+                </label>
+                <Dropdown
+                  options={inventoryStatusOptions}
+                  value={inventoryStatusFilter}
+                  onChange={setInventoryStatusFilter}
+                  placeholder="Select status"
+                  searchable={false}
+                />
+              </div>
+            </>
           )}
         </div>
       </div>

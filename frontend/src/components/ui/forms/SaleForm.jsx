@@ -8,15 +8,32 @@ const SaleForm = ({
   inventory = [],
   existingSale = null,
 }) => {
-  // Generate auto-incremented receipt number
+  // Generate sequential receipt number
   const generateReceiptNumber = () => {
+    // Get existing sales from localStorage or use empty array
+    const existingSales = JSON.parse(localStorage.getItem("sales") || "[]");
+
+    // Get today's date
     const currentDate = new Date();
     const year = currentDate.getFullYear();
     const month = String(currentDate.getMonth() + 1).padStart(2, "0");
     const day = String(currentDate.getDate()).padStart(2, "0");
-    const timestamp = Date.now();
-    const sequence = String(timestamp % 10000).padStart(4, "0");
-    return `RCP-${year}${month}${day}-${sequence}`;
+    const dateString = `${year}${month}${day}`;
+
+    // Filter sales for today
+    const todaySales = existingSales.filter((sale) => {
+      const saleDate = new Date(sale.date);
+      const saleDateString = `${saleDate.getFullYear()}${String(
+        saleDate.getMonth() + 1
+      ).padStart(2, "0")}${String(saleDate.getDate()).padStart(2, "0")}`;
+      return saleDateString === dateString;
+    });
+
+    // Get the next sequence number
+    const nextSequence = todaySales.length + 1;
+    const sequence = String(nextSequence).padStart(4, "0");
+
+    return `${sequence}`;
   };
 
   const [formData, setFormData] = useState({
