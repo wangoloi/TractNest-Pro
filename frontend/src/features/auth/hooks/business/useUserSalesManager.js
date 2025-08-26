@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
-import { toast } from 'react-toastify';
-import { mockSales, mockInventory } from '../../data/mock/salesData';
-import { generateReceiptNumber, calculateSaleTotal } from '../../utils/helpers/salesHelpers';
+import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
+import { mockSales, mockInventory } from "../../../data/mock/salesData";
 
 export const useUserSalesManager = () => {
   const [sales, setSales] = useState([]);
@@ -9,85 +8,111 @@ export const useUserSalesManager = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate loading data
-    const loadData = async () => {
-      setLoading(true);
-      try {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        setSales(mockSales);
-        setInventory(mockInventory);
-      } catch (error) {
-        console.error('Error loading data:', error);
-        toast.error('Failed to load data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
+    fetchData();
   }, []);
 
-  const handleNewSale = (saleData) => {
+  const fetchData = async () => {
     try {
-      const newSale = {
-        id: Date.now().toString(),
-        receiptNumber: generateReceiptNumber(),
-        date: new Date().toISOString(),
-        customerName: saleData.customerName,
-        items: saleData.items,
-        total: calculateSaleTotal(saleData.items),
-        notes: saleData.notes || ''
-      };
+      setLoading(true);
+      // Simulate API call delay
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setSales(mockSales);
+      setInventory(mockInventory);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast.error("Failed to load data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      // Update sales
-      setSales(prevSales => [newSale, ...prevSales]);
+  const handleNewSale = (saleData) => {
+    // Check inventory availability and update stock
+    const updatedInventory = [...inventory];
+    let hasInsufficientStock = false;
+    const insufficientItems = [];
 
-      // Update inventory - reduce quantities
-      setInventory(prevInventory => 
-        prevInventory.map(item => {
-          const soldItem = saleData.items.find(saleItem => saleItem.name === item.name);
-          if (soldItem) {
-            return {
-              ...item,
-              quantity: Math.max(0, item.quantity - soldItem.quantity)
-            };
-          }
-          return item;
-        })
+    for (const saleItem of saleData.items) {
+      const inventoryItem = updatedInventory.find(
+        (inv) => inv.name === saleItem.name
       );
 
-      toast.success('Sale completed successfully!');
-      return newSale;
-    } catch (error) {
-      console.error('Error creating sale:', error);
-      toast.error('Failed to create sale');
-      throw error;
+      if (inventoryItem) {
+        if (inventoryItem.quantity < saleItem.quantity) {
+          hasInsufficientStock = true;
+          insufficientItems.push(
+            `${saleItem.name} (Available: ${inventoryItem.quantity}, Requested: ${saleItem.quantity})`
+          );
+        } else {
+          // Reduce stock quantity
+          inventoryItem.quantity -= saleItem.quantity;
+          // Update status based on new quantity
+          inventoryItem.status =
+            inventoryItem.quantity > 10
+              ? "in-stock"
+              : inventoryItem.quantity > 0
+              ? "low-stock"
+              : "out-of-stock";
+        }
+      } else {
+        // Item not found in inventory - create it with negative quantity to indicate it was sold without being in stock
+        updatedInventory.push({
+          id: Date.now() + Math.random(),
+          name: saleItem.name,
+          quantity: -saleItem.quantity, // Negative to indicate sold without stock
+          price: saleItem.price,
+          cost: 0,
+          status: "out-of-stock",
+          category: "Unknown",
+          supplier: "",
+          supplierPhone: "",
+          supplierEmail: "",
+          dateAdded: new Date().toISOString(),
+        });
+      }
     }
+
+    if (hasInsufficientStock) {
+      toast.error(`Insufficient stock for: ${insufficientItems.join(", ")}`);
+      return;
+    }
+
+    const sale = {
+      id: Date.now(),
+      ...saleData,
+      profit: saleData.items.reduce((sum, item) => {
+        const inventoryItem = inventory.find((inv) => inv.name === item.name);
+        const cost = inventoryItem ? inventoryItem.cost : 0;
+        return sum + (item.price - cost) * item.quantity;
+      }, 0),
+    };
+
+    // Update inventory
+    setInventory(updatedInventory);
+    setSales([sale, ...sales]);
+    toast.success("Sale completed successfully! Stock updated.");
   };
 
   // Calculate statistics
   const stats = {
     todaySales: sales
-      .filter(sale => {
-        const today = new Date().toISOString().split('T')[0];
-        const saleDate = new Date(sale.date).toISOString().split('T')[0];
-        return saleDate === today;
+      .filter((sale) => {
+        const today = new Date().toDateString();
+        const saleDate = new Date(sale.date).toDateString();
+        return today === saleDate;
       })
       .reduce((sum, sale) => sum + sale.total, 0),
-    availableItems: inventory.filter(item => item.quantity > 0).length,
-    lowStockItems: inventory.filter(item => item.quantity <= 5 && item.quantity > 0).length
+    availableItems: inventory.filter((item) => item.quantity > 0).length,
   };
 
   // Get low stock items (quantity <= 5)
-  const lowStockItems = inventory.filter(item => item.quantity <= 5 && item.quantity > 0);
+  const lowStockItems = inventory.filter((item) => item.quantity <= 5);
 
   // Get today's sales
-  const todaySales = sales.filter(sale => {
-    const today = new Date().toISOString().split('T')[0];
-    const saleDate = new Date(sale.date).toISOString().split('T')[0];
-    return saleDate === today;
+  const todaySales = sales.filter((sale) => {
+    const today = new Date().toDateString();
+    const saleDate = new Date(sale.date).toDateString();
+    return today === saleDate;
   });
 
   return {
@@ -97,6 +122,6 @@ export const useUserSalesManager = () => {
     stats,
     handleNewSale,
     lowStockItems,
-    todaySales
+    todaySales,
   };
 };

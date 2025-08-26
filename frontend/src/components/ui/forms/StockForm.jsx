@@ -1,302 +1,301 @@
-import React, { useState } from 'react';
-import { 
-  Package, 
-  DollarSign,
-  X,
-  FileText,
-  Save
-} from 'lucide-react';
-import { toast } from 'react-toastify';
-import { formatNumber } from '../../../lib/utils/formatNumber';
+import React, { useState } from "react";
+import { Package, Save } from "lucide-react";
+import Dropdown from "./Dropdown";
 
-const StockForm = ({ onSave, onCancel, initialData = null }) => {
-  const [formData, setFormData] = useState(initialData || {
-    name: '',
-    category: '',
-    quantity: 1,
-    costPrice: 0,
-    sellingPrice: 0,
-    supplier: '',
-    supplierPhone: '',
-    supplierEmail: '',
-    receiptNumber: '',
-    notes: ''
+const StockForm = ({ onSave, onCancel, existingItem = null }) => {
+  const [formData, setFormData] = useState({
+    name: existingItem?.name || "",
+    category: existingItem?.category || "",
+    quantity: existingItem?.quantity || 0,
+    price: existingItem?.price || 0,
+    cost: existingItem?.cost || 0,
+    supplier: existingItem?.supplier || "",
+    supplierPhone: existingItem?.supplierPhone || "",
+    supplierEmail: existingItem?.supplierEmail || "",
   });
+
+  const [errors, setErrors] = useState({});
+
+  const categories = [
+    { value: "Electronics", label: "Electronics" },
+    { value: "Clothing", label: "Clothing" },
+    { value: "Food & Beverages", label: "Food & Beverages" },
+    { value: "Home & Garden", label: "Home & Garden" },
+    { value: "Sports & Outdoors", label: "Sports & Outdoors" },
+    { value: "Books & Media", label: "Books & Media" },
+    { value: "Automotive", label: "Automotive" },
+    { value: "Health & Beauty", label: "Health & Beauty" },
+    { value: "Toys & Games", label: "Toys & Games" },
+    { value: "Office Supplies", label: "Office Supplies" },
+    { value: "Other", label: "Other" },
+  ];
+
+  const handleInputChange = (field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = "Item name is required";
+    }
+
+    if (!formData.category.trim()) {
+      newErrors.category = "Category is required";
+    }
+
+    if (!formData.quantity || formData.quantity < 0) {
+      newErrors.quantity = "Valid quantity is required";
+    }
+
+    if (!formData.price || formData.price < 0) {
+      newErrors.price = "Valid selling price is required";
+    }
+
+    if (!formData.cost || formData.cost < 0) {
+      newErrors.cost = "Valid cost price is required";
+    }
+
+    if (formData.price < formData.cost) {
+      newErrors.price = "Selling price should be higher than cost price";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    if (!formData.name || formData.quantity <= 0 || formData.costPrice <= 0 || formData.sellingPrice <= 0) {
-      toast.error('Please fill in all required fields');
-      return;
+
+    if (validateForm()) {
+      const stockData = {
+        ...formData,
+        quantity: parseInt(formData.quantity),
+        price: parseInt(formData.price),
+        cost: parseInt(formData.cost),
+      };
+      onSave(stockData);
     }
-
-    const stockData = {
-      ...formData,
-      date: new Date().toISOString(),
-      status: 'completed'
-    };
-
-    onSave(stockData);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-8 max-h-[80vh] overflow-y-auto custom-scrollbar" style={{
-      scrollbarWidth: 'thin',
-      scrollbarColor: '#3B82F6 #E5E7EB'
-    }}>
-      {/* Top Section - Date, Receipt No, Item Name */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {/* Date */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Date:
-          </label>
-          <div className="relative">
-            <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-            <input
-              type="date"
-              value={new Date().toISOString().split('T')[0]}
-              readOnly
-              className="w-full pl-12 pr-6 py-4 border-2 border-green-400 rounded-xl bg-gray-50 font-mono text-lg"
-            />
-          </div>
-        </div>
-
-        {/* Receipt Number */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Receipt No:
-          </label>
-          <div className="relative">
-            <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-            <input
-              type="text"
-              value={formData.receiptNumber}
-              onChange={(e) => setFormData({...formData, receiptNumber: e.target.value})}
-              className="w-full pl-12 pr-6 py-4 border-2 border-green-400 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-lg"
-              placeholder="Enter receipt number"
-            />
-          </div>
-        </div>
-
-        {/* Item Name */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Item Name:
-          </label>
-          <div className="relative">
-            <Package className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Basic Information */}
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          Item Information
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Item Name *
+            </label>
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({...formData, name: e.target.value})}
-              className="w-full pl-12 pr-6 py-4 border-2 border-green-400 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-lg"
+              onChange={(e) => handleInputChange("name", e.target.value)}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                errors.name ? "border-red-500" : "border-gray-300"
+              }`}
               placeholder="Enter item name"
             />
+            {errors.name && (
+              <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Category *
+            </label>
+            <Dropdown
+              options={categories}
+              value={formData.category}
+              onChange={(value) => handleInputChange("category", value)}
+              placeholder="Select category"
+              searchable={true}
+              error={!!errors.category}
+            />
+            {errors.category && (
+              <p className="text-red-500 text-sm mt-1">{errors.category}</p>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Items Section */}
-      <div className="mb-8">
-        <h3 className="text-xl font-semibold text-gray-900 mb-4 border-b border-gray-200 pb-2">Stock Details</h3>
-        
-        {/* Items Table Header */}
-        <div className="bg-gray-100 p-4 rounded-lg mb-4">
-          <div className="grid grid-cols-12 gap-4 items-center font-semibold text-gray-700">
-            <div className="col-span-3">Item Name</div>
-            <div className="col-span-2 text-center">Qty</div>
-            <div className="col-span-2 text-center">Cost Price</div>
-            <div className="col-span-2 text-center">Selling Price</div>
-            <div className="col-span-2 text-center">Total Value</div>
-            <div className="col-span-1 text-center">Actions</div>
+      {/* Stock & Pricing */}
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          Stock & Pricing
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Quantity *
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={formData.quantity}
+              onChange={(e) => handleInputChange("quantity", e.target.value)}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                errors.quantity ? "border-red-500" : "border-gray-300"
+              }`}
+              placeholder="Enter quantity"
+            />
+            {errors.quantity && (
+              <p className="text-red-500 text-sm mt-1">{errors.quantity}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Selling Price (UGX) *
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={formData.price}
+              onChange={(e) => handleInputChange("price", e.target.value)}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                errors.price ? "border-red-500" : "border-gray-300"
+              }`}
+              placeholder="Enter selling price"
+            />
+            {errors.price && (
+              <p className="text-red-500 text-sm mt-1">{errors.price}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Cost Price (UGX) *
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={formData.cost}
+              onChange={(e) => handleInputChange("cost", e.target.value)}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                errors.cost ? "border-red-500" : "border-gray-300"
+              }`}
+              placeholder="Enter cost price"
+            />
+            {errors.cost && (
+              <p className="text-red-500 text-sm mt-1">{errors.cost}</p>
+            )}
           </div>
         </div>
-        
-        {/* Items List */}
-        <div className="space-y-4 max-h-64 overflow-y-auto custom-scrollbar" style={{
-          scrollbarWidth: 'thin',
-          scrollbarColor: '#3B82F6 #E5E7EB'
-        }}>
-          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <div className="grid grid-cols-12 gap-4 items-center">
-              <div className="col-span-3">
-                <div className="relative">
-                  <Package className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="Item name"
-                  />
-                </div>
-              </div>
-              <div className="col-span-2">
-                <input
-                  type="number"
-                  min="1"
-                  value={formData.quantity}
-                  onChange={(e) => setFormData({...formData, quantity: parseInt(e.target.value) || 1})}
-                  className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-center"
-                  placeholder="Qty"
-                />
-              </div>
-              <div className="col-span-2">
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.costPrice}
-                  onChange={(e) => setFormData({...formData, costPrice: parseInt(e.target.value) || 0})}
-                  className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-center"
-                  placeholder="Cost"
-                />
-              </div>
-              <div className="col-span-2">
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.sellingPrice}
-                  onChange={(e) => setFormData({...formData, sellingPrice: parseInt(e.target.value) || 0})}
-                  className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-center"
-                  placeholder="Price"
-                />
-              </div>
-              <div className="col-span-2">
-                <input
-                  type="text"
-                  value={`UGX ${formatNumber(formData.quantity * formData.sellingPrice)}`}
-                  readOnly
-                  className="w-full px-3 py-3 bg-gray-100 border border-gray-300 rounded-lg font-semibold text-center"
-                  placeholder="Auto"
-                />
-              </div>
-              <div className="col-span-1 flex justify-center">
-                <button
-                  type="button"
-                  className="p-2 text-gray-400 cursor-not-allowed"
-                  disabled
-                  title="Single item form"
-                >
-                  <Package size={16} />
-                </button>
-              </div>
+
+        {/* Profit Calculation */}
+        {formData.price && formData.cost && (
+          <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-gray-700">
+                Profit per unit:
+              </span>
+              <span
+                className={`text-lg font-bold ${
+                  formData.price - formData.cost >= 0
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}
+              >
+                UGX {(formData.price - formData.cost).toLocaleString()}
+              </span>
+            </div>
+            <div className="flex justify-between items-center mt-1">
+              <span className="text-sm font-medium text-gray-700">
+                Total profit:
+              </span>
+              <span
+                className={`text-lg font-bold ${
+                  (formData.price - formData.cost) * formData.quantity >= 0
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}
+              >
+                UGX{" "}
+                {(
+                  (formData.price - formData.cost) *
+                  formData.quantity
+                ).toLocaleString()}
+              </span>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Additional Fields */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        {/* Category */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Category:
-          </label>
-          <div className="relative">
-            <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-            <select
-              value={formData.category}
-              onChange={(e) => setFormData({...formData, category: e.target.value})}
-              className="w-full pl-12 pr-6 py-4 border-2 border-green-400 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-lg"
-            >
-              <option value="">Select category</option>
-              <option value="Electronics">Electronics</option>
-              <option value="Clothing">Clothing</option>
-              <option value="Food">Food</option>
-              <option value="Books">Books</option>
-              <option value="Accessories">Accessories</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Supplier Name */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Supplier Name:
-          </label>
-          <div className="relative">
-            <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+      {/* Supplier Information */}
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          Supplier Information
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Supplier Name
+            </label>
             <input
               type="text"
               value={formData.supplier}
-              onChange={(e) => setFormData({...formData, supplier: e.target.value})}
-              className="w-full pl-12 pr-6 py-4 border-2 border-green-400 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-lg"
+              onChange={(e) => handleInputChange("supplier", e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter supplier name"
             />
           </div>
-        </div>
 
-        {/* Supplier Phone */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Supplier Phone:
-          </label>
-          <div className="relative">
-            <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Supplier Phone
+            </label>
             <input
               type="tel"
               value={formData.supplierPhone}
-              onChange={(e) => setFormData({...formData, supplierPhone: e.target.value})}
-              className="w-full pl-12 pr-6 py-4 border-2 border-green-400 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-lg"
+              onChange={(e) =>
+                handleInputChange("supplierPhone", e.target.value)
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter supplier phone"
             />
           </div>
-        </div>
 
-        {/* Supplier Email */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Supplier Email:
-          </label>
-          <div className="relative">
-            <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Supplier Email
+            </label>
             <input
               type="email"
               value={formData.supplierEmail}
-              onChange={(e) => setFormData({...formData, supplierEmail: e.target.value})}
-              className="w-full pl-12 pr-6 py-4 border-2 border-green-400 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-lg"
+              onChange={(e) =>
+                handleInputChange("supplierEmail", e.target.value)
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter supplier email"
             />
           </div>
         </div>
       </div>
 
-      {/* Notes Section */}
-      <div className="mb-8">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Additional Notes:
-        </label>
-        <div className="relative">
-          <FileText className="absolute left-3 top-4 text-gray-400" size={16} />
-          <textarea
-            value={formData.notes}
-            onChange={(e) => setFormData({...formData, notes: e.target.value})}
-            className="w-full pl-12 pr-6 py-4 border-2 border-green-400 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-lg"
-            rows="4"
-            placeholder="Enter any additional notes..."
-          />
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
+      {/* Actions */}
+      <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
         <button
           type="button"
           onClick={onCancel}
-          className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium flex items-center gap-2"
+          className="px-6 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
         >
-          <X size={16} />
           Cancel
         </button>
         <button
           type="submit"
-          className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium flex items-center gap-2"
+          className="flex items-center gap-2 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
         >
           <Save size={16} />
-          Add Stock
+          {existingItem ? "Update Stock" : "Add Stock"}
         </button>
       </div>
     </form>

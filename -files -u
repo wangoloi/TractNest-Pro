@@ -1,6 +1,0 @@
-backend/src/middlewares/logger.js
-frontend/src/components/auth/ProtectedRoute.jsx
-frontend/src/components/layout/Navigation.jsx
-frontend/src/components/shared/Tooltip.jsx
-frontend/src/index.css
-frontend/src/routes/index.jsx

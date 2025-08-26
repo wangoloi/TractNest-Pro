@@ -1,12 +1,36 @@
-import React, { useState, useEffect, useContext } from 'react';
-import api from '../../lib/utils/api';
-import { AuthContext } from './AuthContextDef';
+import React, { useState, useEffect, useContext } from "react";
+import { AuthContext } from "./AuthContextDef";
+
+// Hardcoded credentials for frontend authentication
+const HARDCODED_USERS = {
+  admin: {
+    username: "admin",
+    password: "admin123",
+    role: "admin",
+    name: "Admin User",
+    email: "admin@tracknest.com",
+  },
+  user: {
+    username: "user",
+    password: "user123",
+    role: "user",
+    name: "Regular User",
+    email: "user@tracknest.com",
+  },
+  bachawa: {
+    username: "bachawa",
+    password: "bachawa",
+    role: "owner",
+    name: "Bachawa - TrackNest Pro Owner",
+    email: "bachawa@tracknest.com",
+  },
+};
 
 // Custom hook to use the auth context
 const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
@@ -18,22 +42,22 @@ const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check if user is authenticated on app load
-    const authStatus = localStorage.getItem('isAuthenticated') === 'true';
-    const userData = localStorage.getItem('userData');
-    console.log('🔐 Auth Check:', { authStatus, userData });
-    
+    const authStatus = localStorage.getItem("isAuthenticated") === "true";
+    const userData = localStorage.getItem("userData");
+    console.log("🔐 Auth Check:", { authStatus, userData });
+
     try {
       setIsAuthenticated(authStatus);
       if (userData) {
         const parsedUser = JSON.parse(userData);
         setUser(parsedUser);
-        console.log('🔐 User loaded:', parsedUser);
+        console.log("🔐 User loaded:", parsedUser);
       }
     } catch (error) {
-      console.error('🔐 Error parsing user data:', error);
+      console.error("🔐 Error parsing user data:", error);
       // Clear corrupted data
-      localStorage.removeItem('userData');
-      localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem("userData");
+      localStorage.removeItem("isAuthenticated");
       setIsAuthenticated(false);
       setUser(null);
     } finally {
@@ -43,21 +67,38 @@ const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      console.log('🔐 Login attempt:', { username });
+      console.log("🔐 Login attempt:", { username });
+      console.log("🔐 Available users:", Object.keys(HARDCODED_USERS));
       setLoading(true);
-      const response = await api.post('/api/auth/login', { username, password }, { withCredentials: true });
-      console.log('🔐 Login response:', response.data);
-      localStorage.setItem('isAuthenticated', 'true');
-      console.log(response.data.user, 'response.data.user');
-      localStorage.setItem('userData', JSON.stringify(response.data.user));
+
+      // Check against hardcoded credentials
+      const user = HARDCODED_USERS[username];
+
+      if (!user) {
+        console.log("🔐 User not found:", username);
+        throw new Error("Invalid username or password");
+      }
+
+      if (user.password !== password) {
+        console.log("🔐 Password mismatch for user:", username);
+        throw new Error("Invalid username or password");
+      }
+
+      // Remove password from user object before storing
+      const { password: _, ...userWithoutPassword } = user;
+
+      localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("userData", JSON.stringify(userWithoutPassword));
       setIsAuthenticated(true);
-      setUser(response.data.user);
-      console.log('🔐 Login successful:', response.data.user);
+      setUser(userWithoutPassword);
+      console.log("🔐 Login successful:", userWithoutPassword);
+
+      return userWithoutPassword;
     } catch (error) {
-      console.error('🔐 Login error:', error);
+      console.error("🔐 Login error:", error);
       // Clear any existing authentication state on login failure
-      localStorage.removeItem('isAuthenticated');
-      localStorage.removeItem('userData');
+      localStorage.removeItem("isAuthenticated");
+      localStorage.removeItem("userData");
       setIsAuthenticated(false);
       setUser(null);
       throw error;
@@ -69,13 +110,14 @@ const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       setLoading(true);
-      await api.post('/api/auth/logout', {}, { withCredentials: true });
+      // For frontend-only auth, we don't need to call any API
+      console.log("🔐 Logging out user");
     } catch (error) {
-      console.error('Logout API call failed:', error);
-      // Continue with logout even if API call fails
+      console.error("Logout error:", error);
+      // Continue with logout even if there's an error
     } finally {
-      localStorage.removeItem('isAuthenticated');
-      localStorage.removeItem('userData');
+      localStorage.removeItem("isAuthenticated");
+      localStorage.removeItem("userData");
       setIsAuthenticated(false);
       setUser(null);
       setLoading(false);
@@ -87,14 +129,10 @@ const AuthProvider = ({ children }) => {
     user,
     login,
     logout,
-    loading
+    loading,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export { AuthProvider, useAuth };
