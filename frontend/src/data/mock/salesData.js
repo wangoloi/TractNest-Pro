@@ -6,7 +6,7 @@ export const mockSales = [
       { name: "Laptop Pro", quantity: 1, price: 1200000, total: 1200000 },
     ],
     total: 1200000,
-    profit: 400000,
+    profit: 400000, // Correct profit: 1,200,000 - 800,000 = 400,000
     date: "2024-01-15",
     status: "completed",
     receiptNumber: "001",
@@ -24,7 +24,7 @@ export const mockSales = [
       { name: "Smartphone X", quantity: 2, price: 800000, total: 1600000 },
     ],
     total: 1600000,
-    profit: 400000,
+    profit: 400000, // Correct profit: 1,600,000 - 1,200,000 = 400,000
     date: "2024-01-14",
     status: "completed",
     receiptNumber: "002",

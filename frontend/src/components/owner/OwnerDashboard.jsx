@@ -1,48 +1,49 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Building2, 
   Users, 
   TrendingUp, 
   DollarSign, 
   Package, 
-  AlertTriangle,
-  Plus,
-  Settings,
   Activity,
   BarChart3,
   RefreshCw,
-  Zap
+  Zap,
+  X,
+  Shield,
+  Database,
+  Globe,
+  Target,
+  Award
 } from 'lucide-react';
-// Removed API import - using mock data
-import { formatNumber } from '../../lib/utils/formatNumber';
+import { formatNumber, formatAppCurrency } from '../../lib/utils/formatNumber';
 import { useNavigate } from 'react-router-dom';
 import { SkeletonDashboard } from '../common/Skeleton';
 
 const OwnerDashboard = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState({
-    totalOrganizations: 0,
     totalUsers: 0,
     totalRevenue: 0,
-    activeOrganizations: 0,
-    pendingOrganizations: 0,
-    totalInventory: 0
+    totalInventory: 0,
+    activeUsers: 0,
+    systemUptime: 0,
+    totalTransactions: 0,
+    averageResponseTime: 0,
+    dataUsage: 0
   });
-  const [organizations, setOrganizations] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [activeFilter, setActiveFilter] = useState('all');
 
   useEffect(() => {
-    // Start loading immediately
     setLoading(true);
     fetchOwnerData();
     
-    // Fallback timeout to prevent infinite loading (reduced for faster loading)
     const fallbackTimer = setTimeout(() => {
       console.log('⚠️ Owner Dashboard fallback timeout - forcing loading to false');
       setLoading(false);
-    }, 3000); // 3 seconds max for immediate loading
+    }, 3000);
     
     return () => clearTimeout(fallbackTimer);
   }, []);
@@ -51,55 +52,84 @@ const OwnerDashboard = () => {
     try {
       console.log('🔄 Owner Dashboard: Fetching data...');
       
-      // Mock data for organizations
-      const orgs = [
-        { id: 1, name: 'Demo Organization', slug: 'demo', status: 'active', created_at: new Date().toISOString() },
-        { id: 2, name: 'Tech Solutions Inc', slug: 'techsolutions', status: 'active', created_at: new Date().toISOString() },
-        { id: 3, name: 'Global Enterprises', slug: 'globalenterprises', status: 'pending', created_at: new Date().toISOString() }
-      ];
-      
-      // Mock data for stats
+      // Enhanced mock data for system overview
       const statsData = {
-        totalUsers: 15,
-        totalRevenue: 125000,
-        totalInventory: 250
+        totalUsers: 1250,
+        totalRevenue: 2850000,
+        totalInventory: 15420,
+        activeUsers: 892,
+        systemUptime: 99.8,
+        totalTransactions: 45678,
+        averageResponseTime: 245,
+        dataUsage: 78.5
       };
 
-      setOrganizations(orgs);
-      setStats({
-        totalOrganizations: orgs.length,
-        totalUsers: statsData.totalUsers || 0,
-        totalRevenue: statsData.totalRevenue || 0,
-        activeOrganizations: orgs.filter(org => org.status === 'active').length,
-        pendingOrganizations: orgs.filter(org => org.status === 'pending').length,
-        totalInventory: statsData.totalInventory || 0
-      });
+      setStats(statsData);
 
-      // Mock recent activity
-      const activity = orgs.slice(0, 5).map(org => ({
-        id: org.id,
-        type: 'organization',
-        title: `Organization: ${org.name}`,
-        description: `Status: ${org.status}`,
-        date: org.created_at,
-        status: org.status
-      }));
+      // Enhanced recent activity with system events
+      const activity = [
+        {
+          id: 1,
+          type: 'system',
+          title: 'System Maintenance Completed',
+          description: 'Scheduled maintenance completed successfully',
+          date: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+          status: 'completed',
+          icon: Shield
+        },
+        {
+          id: 2,
+          type: 'user',
+          title: 'New User Registration',
+          description: '25 new users registered today',
+          date: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+          status: 'active',
+          icon: Users
+        },
+        {
+          id: 3,
+          type: 'transaction',
+          title: 'High Volume Transaction',
+          description: 'Processing 1,234 transactions',
+          date: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+          status: 'processing',
+          icon: TrendingUp
+        },
+        {
+          id: 4,
+          type: 'performance',
+          title: 'Performance Optimization',
+          description: 'System response time improved by 15%',
+          date: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+          status: 'completed',
+          icon: Zap
+        },
+        {
+          id: 5,
+          type: 'security',
+          title: 'Security Update Applied',
+          description: 'Latest security patches installed',
+          date: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+          status: 'completed',
+          icon: Shield
+        }
+      ];
 
       setRecentActivity(activity);
       console.log('✅ Owner Dashboard data loaded successfully');
 
     } catch (error) {
       console.error('❌ Error in owner dashboard data processing:', error);
-      // Set default values
       setStats({
-        totalOrganizations: 0,
         totalUsers: 0,
         totalRevenue: 0,
-        activeOrganizations: 0,
-        pendingOrganizations: 0,
-        totalInventory: 0
+        totalInventory: 0,
+        activeUsers: 0,
+        systemUptime: 0,
+        totalTransactions: 0,
+        averageResponseTime: 0,
+        dataUsage: 0
       });
-      setOrganizations([]);
       setRecentActivity([]);
     } finally {
       console.log('🔄 Owner Dashboard loading complete');
@@ -113,13 +143,28 @@ const OwnerDashboard = () => {
     setRefreshing(false);
   };
 
+  // Filter recent activity based on active filter
+  const filteredActivity = recentActivity.filter(activity => {
+    switch (activeFilter) {
+      case 'system':
+        return activity.type === 'system';
+      case 'user':
+        return activity.type === 'user';
+      case 'transaction':
+        return activity.type === 'transaction';
+      case 'all':
+      default:
+        return true;
+    }
+  });
+
   if (loading) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Enterprise Dashboard</h1>
-            <p className="text-gray-600">Loading enterprise data...</p>
+            <h1 className="text-3xl font-bold text-gray-900">System Dashboard</h1>
+            <p className="text-gray-600">Loading system data...</p>
           </div>
         </div>
         <SkeletonDashboard />
@@ -132,8 +177,8 @@ const OwnerDashboard = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Enterprise Dashboard</h1>
-          <p className="text-gray-600">Manage your multi-tenant TrackNest system</p>
+          <h1 className="text-3xl font-bold text-gray-900">System Dashboard</h1>
+          <p className="text-gray-600">TrackNest Pro System Overview & Analytics</p>
         </div>
         <button
           onClick={handleRefresh}
@@ -145,30 +190,17 @@ const OwnerDashboard = () => {
         </button>
       </div>
 
-      {/* Stats Grid */}
+      {/* Primary Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Organizations</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalOrganizations}</p>
-              <p className="text-sm text-green-600 mt-2">{stats.activeOrganizations} active</p>
+              <p className="text-sm font-medium text-gray-600">Total Users</p>
+              <p className="text-2xl font-bold text-gray-900">{formatNumber(stats.totalUsers)}</p>
+              <p className="text-sm text-green-600 mt-2">{formatNumber(stats.activeUsers)} active</p>
             </div>
             <div className="bg-blue-100 rounded-full p-3">
-              <Building2 className="text-blue-600" size={24} />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Users</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalUsers}</p>
-              <p className="text-sm text-gray-500 mt-2">Across all organizations</p>
-            </div>
-            <div className="bg-green-100 rounded-full p-3">
-              <Users className="text-green-600" size={24} />
+              <Users className="text-blue-600" size={24} />
             </div>
           </div>
         </div>
@@ -177,11 +209,11 @@ const OwnerDashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">${formatNumber(stats.totalRevenue)}</p>
-              <p className="text-sm text-gray-500 mt-2">All organizations</p>
+              <p className="text-2xl font-bold text-green-600">{formatAppCurrency(stats.totalRevenue)}</p>
+              <p className="text-sm text-gray-500 mt-2">Lifetime earnings</p>
             </div>
-            <div className="bg-purple-100 rounded-full p-3">
-              <DollarSign className="text-purple-600" size={24} />
+            <div className="bg-green-100 rounded-full p-3">
+              <DollarSign className="text-green-600" size={24} />
             </div>
           </div>
         </div>
@@ -189,106 +221,137 @@ const OwnerDashboard = () => {
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Inventory</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalInventory}</p>
-              <p className="text-sm text-gray-500 mt-2">Items across system</p>
+              <p className="text-sm font-medium text-gray-600">System Uptime</p>
+              <p className="text-2xl font-bold text-purple-600">{stats.systemUptime}%</p>
+              <p className="text-sm text-gray-500 mt-2">Last 30 days</p>
+            </div>
+            <div className="bg-purple-100 rounded-full p-3">
+              <Shield className="text-purple-600" size={24} />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Transactions</p>
+              <p className="text-2xl font-bold text-orange-600">{formatNumber(stats.totalTransactions)}</p>
+              <p className="text-sm text-gray-500 mt-2">Processed today</p>
             </div>
             <div className="bg-orange-100 rounded-full p-3">
-              <Package className="text-orange-600" size={24} />
+              <TrendingUp className="text-orange-600" size={24} />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Organizations and Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Organizations List */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-              <Building2 size={24} />
-              Organizations
-            </h2>
-                         <button
-               onClick={() => navigate('/organizations')}
-               className="flex items-center gap-2 px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
-             >
-              <Plus size={16} />
-              Add New
-            </button>
+      {/* Secondary Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Performance</h3>
+            <BarChart3 className="text-blue-600" size={20} />
           </div>
-          <div className="p-6">
-            <div className="space-y-4">
-              {organizations.slice(0, 5).map((org) => (
-                <div key={org.id} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
-                  <div className="bg-blue-100 rounded-full p-2">
-                    <Building2 className="text-blue-600" size={16} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">{org.name}</p>
-                    <p className="text-sm text-gray-600">{org.slug}</p>
-                    <p className="text-xs text-gray-500">{new Date(org.created_at).toLocaleDateString()}</p>
-                  </div>
-                  <div className="text-right">
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      org.status === 'active' ? 'bg-green-100 text-green-800' :
-                      org.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {org.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
-              {organizations.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  <Building2 className="mx-auto mb-2" size={32} />
-                  <p>No organizations yet</p>
-                  <p className="text-sm">Create your first organization to get started</p>
-                </div>
-              )}
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Avg Response Time</span>
+              <span className="text-sm font-medium text-gray-900">{stats.averageResponseTime}ms</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Data Usage</span>
+              <span className="text-sm font-medium text-gray-900">{stats.dataUsage}%</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Inventory Items</span>
+              <span className="text-sm font-medium text-gray-900">{formatNumber(stats.totalInventory)}</span>
             </div>
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-              <Activity size={24} />
-              Recent Activity
-            </h2>
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">System Health</h3>
+            <Activity className="text-green-600" size={20} />
           </div>
-          <div className="p-6">
-            <div className="space-y-4">
-              {recentActivity.map((activity) => (
-                <div key={activity.id} className="flex items-center gap-4">
-                  <div className="bg-green-100 rounded-full p-2">
-                    <Building2 className="text-green-600" size={16} />
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Database</span>
+              <span className="text-sm font-medium text-green-600">Healthy</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">API Services</span>
+              <span className="text-sm font-medium text-green-600">Online</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Backup Status</span>
+              <span className="text-sm font-medium text-green-600">Up to date</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Quick Stats</h3>
+            <Target className="text-purple-600" size={20} />
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Active Sessions</span>
+              <span className="text-sm font-medium text-gray-900">1,247</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Daily Logins</span>
+              <span className="text-sm font-medium text-gray-900">892</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Support Tickets</span>
+              <span className="text-sm font-medium text-gray-900">23</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Activity */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+            <Activity size={24} />
+            Recent System Activity
+          </h2>
+        </div>
+        <div className="p-6">
+          <div className="space-y-4">
+            {filteredActivity.map((activity) => {
+              const IconComponent = activity.icon;
+              return (
+                <div key={activity.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                  <div className="bg-blue-100 rounded-full p-2">
+                    <IconComponent className="text-blue-600" size={16} />
                   </div>
                   <div className="flex-1">
                     <p className="font-medium text-gray-900">{activity.title}</p>
                     <p className="text-sm text-gray-600">{activity.description}</p>
-                    <p className="text-xs text-gray-500">{new Date(activity.date).toLocaleDateString()}</p>
+                    <p className="text-xs text-gray-500">{new Date(activity.date).toLocaleString()}</p>
                   </div>
                   <div className="text-right">
                     <span className={`text-xs px-2 py-1 rounded-full ${
-                      activity.status === 'active' ? 'bg-green-100 text-green-800' :
-                      activity.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                      activity.status === 'completed' ? 'bg-green-100 text-green-800' :
+                      activity.status === 'active' ? 'bg-blue-100 text-blue-800' :
+                      activity.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
                       'bg-red-100 text-red-800'
                     }`}>
                       {activity.status}
                     </span>
                   </div>
                 </div>
-              ))}
-              {recentActivity.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  <Activity className="mx-auto mb-2" size={32} />
-                  <p>No recent activity</p>
-                </div>
-              )}
-            </div>
+              );
+            })}
+            {filteredActivity.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <Activity className="mx-auto mb-2" size={32} />
+                <p>No recent activity</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -300,34 +363,36 @@ const OwnerDashboard = () => {
           Quick Actions
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                     <button 
-             onClick={() => navigate('/organizations')}
-             className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
-           >
-            <Building2 className="text-blue-600" size={20} />
+          <button 
+            onClick={() => navigate('/admin-management')}
+            className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+          >
+            <Shield className="text-blue-600" size={20} />
             <div className="text-left">
-              <p className="font-medium text-blue-900">Manage Organizations</p>
-              <p className="text-sm text-blue-700">Add, edit, or remove tenants</p>
+              <p className="font-medium text-blue-900">Admin Management</p>
+              <p className="text-sm text-blue-700">Manage system administrators</p>
             </div>
           </button>
-                     <button 
-             onClick={() => navigate('/enterprise-users')}
-             className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors"
-           >
+          
+          <button 
+            onClick={() => navigate('/user-management')}
+            className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors"
+          >
             <Users className="text-green-600" size={20} />
             <div className="text-left">
-              <p className="font-medium text-green-900">Manage Users</p>
-              <p className="text-sm text-green-700">Add admins to organizations</p>
+              <p className="font-medium text-green-900">User Management</p>
+              <p className="text-sm text-green-700">Manage system users</p>
             </div>
           </button>
-                     <button 
-             onClick={() => navigate('/system-settings')}
-             className="flex items-center gap-3 p-4 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors"
-           >
-            <Settings className="text-purple-600" size={20} />
+          
+          <button 
+            onClick={() => navigate('/settings')}
+            className="flex items-center gap-3 p-4 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors"
+          >
+            <Database className="text-purple-600" size={20} />
             <div className="text-left">
               <p className="font-medium text-purple-900">System Settings</p>
-              <p className="text-sm text-purple-700">Configure enterprise settings</p>
+              <p className="text-sm text-purple-700">Configure system preferences</p>
             </div>
           </button>
         </div>

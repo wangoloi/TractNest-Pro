@@ -1,131 +1,98 @@
-import React, { useState, useEffect } from "react";
-import {
-  useFloating,
-  offset,
-  flip,
-  shift,
-  autoUpdate,
-} from "@floating-ui/react-dom-interactions";
-import { AnimatePresence, motion } from "framer-motion";
-import { createPortal } from "react-dom";
+import React, { useState, useRef, useEffect } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 const ButtonDropdown = ({
-  buttonContent,
   options = [],
+  value,
+  onChange,
+  placeholder = "Select option...",
   disabled = false,
   className = "",
   buttonClassName = "",
-  onOpenChange = () => {}, // Default to a no-op function
+  dropdownClassName = "",
+  size = "md",
+  variant = "default"
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
-  const { x, y, reference, floating, strategy, update, refs } = useFloating({
-    placement: "bottom",
-    middleware: [offset(8), flip(), shift()],
-  });
-
-  // Auto-update position on resize/scroll
-  useEffect(() => {
-    if (!isOpen) return;
-    return autoUpdate(refs.reference.current, refs.floating.current, update);
-  }, [isOpen, refs.reference, refs.floating, update]);
-
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        refs.floating.current &&
-        !refs.floating.current.contains(event.target) &&
-        refs.reference.current &&
-        !refs.reference.current.contains(event.target)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);
-        onOpenChange(false);
       }
     };
 
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen, refs.floating, refs.reference, onOpenChange]);
+  }, []);
 
-  // Notify parent when dropdown opens/closes
-  useEffect(() => {
-    onOpenChange(isOpen);
-  }, [isOpen, onOpenChange]);
+  const handleSelect = (option) => {
+    onChange(option.value);
+    setIsOpen(false);
+  };
+
+  const selectedOption = options.find(option => option.value === value);
+
+  const sizeClasses = {
+    sm: "px-3 py-1.5 text-sm",
+    md: "px-4 py-2 text-sm",
+    lg: "px-6 py-3 text-base"
+  };
+
+  const variantClasses = {
+    default: "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50",
+    primary: "bg-blue-500 border border-blue-500 text-white hover:bg-blue-600",
+    secondary: "bg-gray-500 border border-gray-500 text-white hover:bg-gray-600",
+    outline: "bg-transparent border border-gray-300 text-gray-700 hover:bg-gray-50"
+  };
 
   return (
-    <div className={`relative inline-block ${className}`}>
+    <div className={`relative ${className}`} ref={dropdownRef}>
       <button
-        ref={reference}
+        type="button"
+        onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setIsOpen((prev) => !prev);
-        }}
         className={`
-          flex items-center transition-all duration-300
-          ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+          w-full flex items-center justify-between rounded-lg transition-colors
+          ${sizeClasses[size]}
+          ${variantClasses[variant]}
+          ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
           ${buttonClassName}
         `}
-        data-button-dropdown="true"
       >
-        {buttonContent}
+        <span className="truncate">
+          {selectedOption ? selectedOption.label : placeholder}
+        </span>
+        {isOpen ? (
+          <ChevronUp size={16} className="ml-2 flex-shrink-0" />
+        ) : (
+          <ChevronDown size={16} className="ml-2 flex-shrink-0" />
+        )}
       </button>
 
-      {createPortal(
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              ref={floating}
-              initial={{ opacity: 0, scale: 0.95, y: -10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -10 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              style={{
-                position: strategy,
-                top: y ?? 0,
-                left: x ?? 0,
-                zIndex: 9999,
-                minWidth: "10rem",
-              }}
-              className="bg-white rounded-xl shadow-xl"
-              data-button-dropdown="true"
+      {isOpen && (
+        <div className={`
+          absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg
+          max-h-60 overflow-y-auto
+          ${dropdownClassName}
+        `}>
+          {options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => handleSelect(option)}
+              className={`
+                w-full px-4 py-2 text-left hover:bg-gray-50 transition-colors
+                ${option.value === value ? 'bg-blue-50 text-blue-700' : 'text-gray-700'}
+              `}
             >
-              <div className="p-2">
-                {options.map((option, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setIsOpen(false);
-                      onOpenChange(false);
-                      option.onClick?.(option.value);
-                    }}
-                    className={`w-full flex items-center gap-3 px-4 py-2 text-left 
-                      hover:bg-gray-100 transition-colors duration-200 rounded-md
-                      ${option.danger ? "text-red-600" : "text-gray-900"}
-                    `}
-                  >
-                    {option.icon &&
-                      React.createElement(option.icon, {
-                        className: "h-4 w-4",
-                      })}
-                    <span>{option.label}</span>
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>,
-        document.body
+              {option.label}
+            </button>
+          ))}
+        </div>
       )}
     </div>
   );

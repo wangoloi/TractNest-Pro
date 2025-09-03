@@ -19,9 +19,8 @@ import {
   Award,
   FileText
 } from 'lucide-react';
-import { formatNumber } from '../../lib/utils/formatNumber';
+import { formatNumber, formatAppCurrency } from '../../lib/utils/formatNumber';
 import { useAuth } from '../../app/providers/AuthContext';
-import CustomerDashboard from '../customer/CustomerDashboard';
 import OwnerDashboard from '../owner/OwnerDashboard';
 import { useNavigate } from 'react-router-dom';
 import { SkeletonDashboard } from '../common/Skeleton';
@@ -197,7 +196,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Sales</p>
-              <p className="text-2xl font-bold text-gray-900">${formatNumber(stats.totalSales)}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatAppCurrency(stats.totalSales)}</p>
               <div className="flex items-center mt-2">
                 <TrendingUp className="text-green-500" size={16} />
                 <span className="text-sm text-green-600 ml-1">+{stats.monthlyGrowth}%</span>
@@ -213,7 +212,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Profit</p>
-              <p className="text-2xl font-bold text-gray-900">${formatNumber(stats.totalProfit)}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatAppCurrency(stats.totalProfit)}</p>
               <p className="text-sm text-gray-500 mt-2">{stats.profitMargin}% margin</p>
             </div>
             <div className="bg-blue-100 rounded-full p-3">
@@ -283,7 +282,7 @@ const Dashboard = () => {
                   </div>
                   {activity.amount && (
                     <div className="text-right">
-                      <p className="font-medium text-gray-900">${formatNumber(activity.amount)}</p>
+                      <p className="font-medium text-gray-900">{formatAppCurrency(activity.amount)}</p>
                     </div>
                   )}
                 </div>
@@ -314,19 +313,8 @@ const Dashboard = () => {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium text-gray-900">${formatNumber(product.revenue)}</p>
-                    <div className="flex items-center">
-                      {product.growth > 0 ? (
-                        <ArrowUpRight className="text-green-500" size={14} />
-                      ) : (
-                        <ArrowDownRight className="text-red-500" size={14} />
-                      )}
-                      <span className={`text-sm ml-1 ${
-                        product.growth > 0 ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {Math.abs(product.growth)}%
-                      </span>
-                    </div>
+                    <p className="font-medium text-gray-900">{formatAppCurrency(product.revenue)}</p>
+                    <p className="text-sm text-gray-500">+{product.growth}%</p>
                   </div>
                 </div>
               ))}

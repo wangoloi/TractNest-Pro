@@ -5,6 +5,7 @@ import { mockSales, mockInventory } from "../../../data/mock/salesData";
 export const useSalesManager = () => {
   const [sales, setSales] = useState([]);
   const [inventory, setInventory] = useState([]);
+  const [stockReceipts, setStockReceipts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState("sales"); // 'sales' or 'inventory'
 
@@ -51,7 +52,15 @@ export const useSalesManager = () => {
       const salesData = savedSales ? JSON.parse(savedSales) : mockSales;
       setSales(salesData);
 
-      setInventory(mockInventory);
+      // Load stock receipts from localStorage
+      const savedStockReceipts = localStorage.getItem("stockReceipts");
+      const stockReceiptsData = savedStockReceipts ? JSON.parse(savedStockReceipts) : [];
+      setStockReceipts(stockReceiptsData);
+
+      // Load inventory from localStorage or use mock data
+      const savedInventory = localStorage.getItem("inventory");
+      const inventoryData = savedInventory ? JSON.parse(savedInventory) : mockInventory;
+      setInventory(inventoryData);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed to load data");
@@ -75,7 +84,9 @@ export const useSalesManager = () => {
         profit: saleData.items.reduce((sum, item) => {
           const inventoryItem = inventory.find((inv) => inv.name === item.name);
           const cost = inventoryItem ? inventoryItem.cost : 0;
-          return sum + (item.price - cost) * item.quantity;
+          const itemProfit = (item.price - cost) * item.quantity;
+          console.log(`Profit calculation for ${item.name}: price=${item.price}, cost=${cost}, quantity=${item.quantity}, profit=${itemProfit}`);
+          return sum + itemProfit;
         }, 0),
       };
       setSales(updatedSales);
@@ -90,7 +101,9 @@ export const useSalesManager = () => {
         profit: saleData.items.reduce((sum, item) => {
           const inventoryItem = inventory.find((inv) => inv.name === item.name);
           const cost = inventoryItem ? inventoryItem.cost : 0;
-          return sum + (item.price - cost) * item.quantity;
+          const itemProfit = (item.price - cost) * item.quantity;
+          console.log(`Profit calculation for ${item.name}: price=${item.price}, cost=${cost}, quantity=${item.quantity}, profit=${itemProfit}`);
+          return sum + itemProfit;
         }, 0),
       };
 
@@ -155,6 +168,8 @@ export const useSalesManager = () => {
     }
 
     setInventory(updatedInventory);
+    // Save updated inventory to localStorage
+    localStorage.setItem("inventory", JSON.stringify(updatedInventory));
     return true;
   };
 
@@ -185,65 +200,153 @@ export const useSalesManager = () => {
         }
       }
       setInventory(updatedInventory);
+      // Save updated inventory to localStorage
+      localStorage.setItem("inventory", JSON.stringify(updatedInventory));
 
       toast.success("Sale deleted successfully! Stock restored.");
     }
   };
 
   const handleNewStock = (stockData) => {
-    // Check if item already exists in inventory
-    const existingItemIndex = inventory.findIndex(
-      (item) => item.name === stockData.name
-    );
-
-    if (existingItemIndex !== -1) {
-      // Update existing item
+    // Check if stockData is an array (multiple items from same invoice)
+    if (Array.isArray(stockData)) {
+      // Handle multiple items from the same invoice
       const updatedInventory = [...inventory];
-      const existingItem = updatedInventory[existingItemIndex];
+      const newItems = [];
+      
+      stockData.forEach((item, index) => {
+        // Check if item already exists in inventory
+        const existingItemIndex = updatedInventory.findIndex(
+          (invItem) => invItem.name === item.name
+        );
 
-      // Add new quantity to existing stock
-      existingItem.quantity += stockData.quantity;
+        if (existingItemIndex !== -1) {
+          // Update existing item
+          const existingItem = updatedInventory[existingItemIndex];
+          existingItem.quantity += item.quantity;
 
-      // Update other details if provided
-      if (stockData.category) existingItem.category = stockData.category;
-      if (stockData.sellingPrice) existingItem.price = stockData.sellingPrice;
-      if (stockData.costPrice) existingItem.cost = stockData.costPrice;
-      if (stockData.supplier) existingItem.supplier = stockData.supplier;
-      if (stockData.supplierPhone)
-        existingItem.supplierPhone = stockData.supplierPhone;
-      if (stockData.supplierEmail)
-        existingItem.supplierEmail = stockData.supplierEmail;
+          // Update other details if provided
+          if (item.category) existingItem.category = item.category;
+          if (item.price) existingItem.price = item.price;
+          if (item.cost) existingItem.cost = item.cost;
+          if (item.supplier) existingItem.supplier = item.supplier;
+          if (item.supplierPhone) existingItem.supplierPhone = item.supplierPhone;
+          if (item.supplierEmail) existingItem.supplierEmail = item.supplierEmail;
 
-      // Update status based on new total quantity
-      existingItem.status =
-        existingItem.quantity > 10
-          ? "in-stock"
-          : existingItem.quantity > 0
-          ? "low-stock"
-          : "out-of-stock";
+          // Update status based on new total quantity
+          existingItem.status =
+            existingItem.quantity > 10
+              ? "in-stock"
+              : existingItem.quantity > 0
+              ? "low-stock"
+              : "out-of-stock";
+        } else {
+          // Add new item
+          const stockItem = {
+            id: Date.now() + index, // Ensure unique ID for each item
+            ...item,
+            status:
+              item.quantity > 10
+                ? "in-stock"
+                : item.quantity > 0
+                ? "low-stock"
+                : "out-of-stock",
+            dateAdded: new Date().toISOString(),
+          };
+          newItems.push(stockItem);
+        }
+      });
 
-      setInventory(updatedInventory);
-      toast.success(
-        `Stock updated successfully! ${stockData.quantity} units added to ${stockData.name}. Total: ${existingItem.quantity}`
-      );
-    } else {
-      // Add new item
-      const stockItem = {
+      // Add all new items to inventory
+      const finalInventory = [...newItems, ...updatedInventory];
+      setInventory(finalInventory);
+      // Save updated inventory to localStorage
+      localStorage.setItem("inventory", JSON.stringify(finalInventory));
+      
+      // Save stock receipt data
+      const stockReceipt = {
         id: Date.now(),
-        ...stockData,
-        status:
-          stockData.quantity > 10
-            ? "in-stock"
-            : stockData.quantity > 0
-            ? "low-stock"
-            : "out-of-stock",
+        invoiceNumber: stockData[0]?.invoiceNumber || 'Unknown',
+        supplier: stockData[0]?.supplier || 'Unknown',
+        supplierPhone: stockData[0]?.supplierPhone || '',
+        supplierEmail: stockData[0]?.supplierEmail || '',
+        items: stockData,
+        totalItems: stockData.length,
+        totalValue: stockData.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+        totalCost: stockData.reduce((sum, item) => sum + (item.cost * item.quantity), 0),
         dateAdded: new Date().toISOString(),
       };
-
-      setInventory([stockItem, ...inventory]);
+      
+      const updatedStockReceipts = [stockReceipt, ...stockReceipts];
+      setStockReceipts(updatedStockReceipts);
+      localStorage.setItem("stockReceipts", JSON.stringify(updatedStockReceipts));
+      
+      // Show success message with invoice info
+      const invoiceNumber = stockData[0]?.invoiceNumber || 'Unknown';
+      const totalItems = stockData.length;
       toast.success(
-        `New stock item added successfully! ${stockData.quantity} units of ${stockData.name}`
+        `Stock invoice ${invoiceNumber} saved successfully! ${totalItems} items added to inventory.`
       );
+    } else {
+      // Handle single item (existing logic)
+      const existingItemIndex = inventory.findIndex(
+        (item) => item.name === stockData.name
+      );
+
+      if (existingItemIndex !== -1) {
+        // Update existing item
+        const updatedInventory = [...inventory];
+        const existingItem = updatedInventory[existingItemIndex];
+
+        // Add new quantity to existing stock
+        existingItem.quantity += stockData.quantity;
+
+        // Update other details if provided
+        if (stockData.category) existingItem.category = stockData.category;
+        if (stockData.price) existingItem.price = stockData.price;
+        if (stockData.cost) existingItem.cost = stockData.cost;
+        if (stockData.supplier) existingItem.supplier = stockData.supplier;
+        if (stockData.supplierPhone)
+          existingItem.supplierPhone = stockData.supplierPhone;
+        if (stockData.supplierEmail)
+          existingItem.supplierEmail = stockData.supplierEmail;
+
+        // Update status based on new total quantity
+        existingItem.status =
+          existingItem.quantity > 10
+            ? "in-stock"
+            : existingItem.quantity > 0
+            ? "low-stock"
+            : "out-of-stock";
+
+        setInventory(updatedInventory);
+        // Save updated inventory to localStorage
+        localStorage.setItem("inventory", JSON.stringify(updatedInventory));
+        toast.success(
+          `Stock updated successfully! ${stockData.quantity} units added to ${stockData.name}. Total: ${existingItem.quantity}`
+        );
+      } else {
+        // Add new item
+        const stockItem = {
+          id: Date.now(),
+          ...stockData,
+          status:
+            stockData.quantity > 10
+              ? "in-stock"
+              : stockData.quantity > 0
+              ? "low-stock"
+              : "out-of-stock",
+          dateAdded: new Date().toISOString(),
+        };
+
+        const newInventory = [stockItem, ...inventory];
+        setInventory(newInventory);
+        // Save updated inventory to localStorage
+        localStorage.setItem("inventory", JSON.stringify(newInventory));
+        toast.success(
+          `New stock item added successfully! ${stockData.quantity} units of ${stockData.name}`
+        );
+      }
     }
   };
 
@@ -251,6 +354,8 @@ export const useSalesManager = () => {
     if (window.confirm(`Are you sure you want to delete "${item.name}"?`)) {
       const updatedInventory = inventory.filter((i) => i.id !== item.id);
       setInventory(updatedInventory);
+      // Save updated inventory to localStorage
+      localStorage.setItem("inventory", JSON.stringify(updatedInventory));
       toast.success(`Stock item "${item.name}" deleted successfully!`);
     }
   };
@@ -280,6 +385,7 @@ export const useSalesManager = () => {
   return {
     sales,
     inventory,
+    stockReceipts,
     loading,
     view,
     setView,
@@ -291,6 +397,9 @@ export const useSalesManager = () => {
     printReceipt,
   };
 };
+
+// Export useUserSalesManager as an alias to useSalesManager
+export const useUserSalesManager = useSalesManager;
 
 // Helper function to generate receipt HTML
 const generateReceiptHTML = (sale) => {

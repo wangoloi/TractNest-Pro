@@ -16,6 +16,13 @@ const ProtectedRoute = ({ children, requireAuth = true, adminOnly = false, owner
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // If user is authenticated but blocked or inactive, redirect to login
+  if (isAuthenticated && user) {
+    if (user.isBlocked || user.status !== 'active') {
+      return <Navigate to="/login" replace />;
+    }
+  }
+
   // If route requires owner but user is not owner
   if (ownerOnly && user?.role !== 'owner') {
     return <Navigate to="/" replace />;

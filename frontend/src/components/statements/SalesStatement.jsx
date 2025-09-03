@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Download } from 'lucide-react';
-import { formatNumber } from '../../utils/formatNumber';
+import { formatNumber, formatAppCurrency } from '../../utils/formatNumber';
 
 const SalesStatement = ({ salesRecords, timePeriod, customStartDate, customEndDate }) => {
   const [filteredSales, setFilteredSales] = useState([]);
@@ -84,8 +84,8 @@ const SalesStatement = ({ salesRecords, timePeriod, customStartDate, customEndDa
     doc.text(`Period: ${startDate.toDateString()} to ${endDate.toDateString()}`, 20, 35);
     
     // Add summary
-    doc.text(`Total Sales Amount: UGX ${formatNumber(totalSalesAmount)}`, 20, 45);
-    doc.text(`Total Sales Profit: UGX ${formatNumber(totalSalesProfit)}`, 20, 55);
+            doc.text(`Total Sales Amount: ${formatAppCurrency(totalSalesAmount)}`, 20, 45);
+        doc.text(`Total Sales Profit: ${formatAppCurrency(totalSalesProfit)}`, 20, 55);
     
     // Add sales table
     if (filteredSales.length > 0) {
@@ -93,8 +93,8 @@ const SalesStatement = ({ salesRecords, timePeriod, customStartDate, customEndDa
         sale.id,
         new Date(sale.date).toLocaleDateString(),
         sale.customer,
-        `UGX ${formatNumber(sale.total)}`,
-        `UGX ${formatNumber(sale.profit)}`
+                        `${formatAppCurrency(sale.total)}`,
+                `${formatAppCurrency(sale.profit)}`
       ]);
       
       autoTable(doc, {
@@ -113,8 +113,8 @@ const SalesStatement = ({ salesRecords, timePeriod, customStartDate, customEndDa
       // Add totals
       const finalY = doc.lastAutoTable.finalY || 65;
       doc.setFontSize(14);
-      doc.text(`Total Sales Amount: UGX ${formatNumber(totalSalesAmount)}`, 150, finalY + 15);
-      doc.text(`Total Sales Profit: UGX ${formatNumber(totalSalesProfit)}`, 150, finalY + 25);
+              doc.text(`Total Sales Amount: ${formatAppCurrency(totalSalesAmount)}`, 150, finalY + 15);
+        doc.text(`Total Sales Profit: ${formatAppCurrency(totalSalesProfit)}`, 150, finalY + 25);
     } else {
       doc.text('No sales records found for the selected period.', 20, 75);
     }
@@ -139,11 +139,11 @@ const SalesStatement = ({ salesRecords, timePeriod, customStartDate, customEndDa
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div className="p-3 bg-blue-50 rounded-md">
           <p className="text-sm text-gray-500">Total Sales Amount</p>
-          <p className="text-lg font-bold text-blue-600">UGX {formatNumber(totalSalesAmount)}</p>
+          <p className="text-lg font-bold text-blue-600">{formatAppCurrency(totalSalesAmount)}</p>
         </div>
         <div className="p-3 bg-green-50 rounded-md">
           <p className="text-sm text-gray-500">Total Sales Profit</p>
-          <p className="text-lg font-bold text-green-600">UGX {formatNumber(totalSalesProfit)}</p>
+          <p className="text-lg font-bold text-green-600">{formatAppCurrency(totalSalesProfit)}</p>
         </div>
       </div>
       
@@ -165,8 +165,8 @@ const SalesStatement = ({ salesRecords, timePeriod, customStartDate, customEndDa
                   <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{sale.id}</td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{new Date(sale.date).toLocaleDateString()}</td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{sale.customer}</td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">UGX {formatNumber(sale.total)}</td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">UGX {formatNumber(sale.profit)}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{formatAppCurrency(sale.total)}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{formatAppCurrency(sale.profit)}</td>
                 </tr>
               ))
             ) : (

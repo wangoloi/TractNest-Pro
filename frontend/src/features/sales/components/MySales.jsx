@@ -3,8 +3,7 @@ import { Search, Printer, Edit, Trash2, Eye, ArrowLeft } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { toast } from 'react-toastify';
-import api from '../../../lib/utils/api';
-import { formatNumber } from '../../../lib/utils/formatNumber';
+import { formatAppCurrency } from '../../../lib/utils/formatNumber';
 
 const MySales = () => {
   const [invoices, setInvoices] = useState([]);
@@ -22,8 +21,10 @@ const MySales = () => {
   const fetchInvoices = async () => {
     try {
       setIsLoading(true);
-      const { data } = await api.get('/api/sales');
-      setInvoices(data);
+      // Load sales from localStorage
+      const savedSales = localStorage.getItem("sales");
+      const salesData = savedSales ? JSON.parse(savedSales) : [];
+      setInvoices(salesData);
     } catch (error) {
       toast.error('Failed to fetch sales data');
       console.error('Error fetching sales:', error);
@@ -35,14 +36,15 @@ const MySales = () => {
   };
 
   const filteredInvoices = invoices.filter(invoice =>
-    invoice.itemName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    invoice.id?.toString().includes(searchTerm.toLowerCase())
+    invoice.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    invoice.receiptNumber?.toString().includes(searchTerm.toLowerCase()) ||
+    invoice.items?.some(item => item.name?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const sortedInvoices = filteredInvoices.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const sortedInvoices = filteredInvoices.sort((a, b) => new Date(b.date) - new Date(a.date));
 
   // Calculate summary data
-  const totalSalesAmount = invoices.reduce((sum, invoice) => sum + (invoice.totalPrice || 0), 0);
+  const totalSalesAmount = invoices.reduce((sum, invoice) => sum + (invoice.total || 0), 0);
   const totalSalesProfit = invoices.reduce((sum, invoice) => sum + (invoice.profit || 0), 0);
   const totalInvoices = invoices.length;
 
@@ -67,14 +69,18 @@ const MySales = () => {
      
      // Sale details
      doc.setFontSize(12);
-     doc.text(`Sale ID: ${selectedInvoice.id}`, 20, 35);
-     doc.text(`Date: ${new Date(selectedInvoice.createdAt).toLocaleDateString()}`, 20, 45);
-     doc.text(`Item: ${selectedInvoice.itemName}`, 20, 55);
+     doc.text(`Receipt #: ${selectedInvoice.receiptNumber}`, 20, 35);
+     doc.text(`Date: ${new Date(selectedInvoice.date).toLocaleDateString()}`, 20, 45);
+     doc.text(`Customer: ${selectedInvoice.customerName}`, 20, 55);
     
          // Sale details table
-     const saleData = [
-       [selectedInvoice.itemName, selectedInvoice.quantity.toString(), `UGX ${formatNumber(selectedInvoice.unitPrice)}`, `UGX ${formatNumber(selectedInvoice.totalPrice)}`, `UGX ${formatNumber(selectedInvoice.profit)}`]
-     ];
+     const saleData = selectedInvoice.items.map(item => [
+       item.name, 
+       item.quantity.toString(), 
+       formatAppCurrency(item.price), 
+       formatAppCurrency(item.total), 
+       formatAppCurrency((item.price - (item.cost || 0)) * item.quantity)
+     ]);
      
      autoTable(doc, {
        startY: 65,
@@ -87,10 +93,10 @@ const MySales = () => {
      
      const finalY = doc.lastAutoTable.finalY || 65;
      doc.setFontSize(14);
-     doc.text(`Total: UGX ${formatNumber(selectedInvoice.totalPrice)}`, 150, finalY + 15);
-     doc.text(`Profit: UGX ${formatNumber(selectedInvoice.profit)}`, 150, finalY + 25);
+     doc.text(`Total: ${formatAppCurrency(selectedInvoice.total)}`, 150, finalY + 15);
+     doc.text(`Profit: ${formatAppCurrency(selectedInvoice.profit)}`, 150, finalY + 25);
      
-     doc.save(`sale-${selectedInvoice.id}.pdf`);
+     doc.save(`sale-${selectedInvoice.receiptNumber}.pdf`);
   };
 
 
@@ -133,11 +139,11 @@ const MySales = () => {
                 </div>
                 <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
                   <p className="text-sm text-gray-500 mb-1">Total Sales</p>
-                  <p className="text-2xl font-bold text-green-600">UGX {formatNumber(totalSalesAmount)}</p>
+                  <p className="text-2xl font-bold text-green-600">{formatAppCurrency(totalSalesAmount)}</p>
                 </div>
                 <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
                   <p className="text-sm text-gray-500 mb-1">Total Profit</p>
-                  <p className="text-2xl font-bold text-purple-600">UGX {formatNumber(totalSalesProfit)}</p>
+                  <p className="text-2xl font-bold text-purple-600">{formatAppCurrency(totalSalesProfit)}</p>
                 </div>
               </div>
             </div>
@@ -181,11 +187,11 @@ const MySales = () => {
                      </div>
                      <div>
                        <p className="text-sm text-gray-500 mb-1">Total Amount</p>
-                       <p className="font-semibold text-green-600">UGX {formatNumber(invoice.totalPrice)}</p>
+                       <p className="font-semibold text-green-600">{formatAppCurrency(invoice.totalPrice)}</p>
                      </div>
                      <div>
                        <p className="text-sm text-gray-500 mb-1">Profit</p>
-                       <p className="font-semibold text-blue-600">UGX {formatNumber(invoice.profit)}</p>
+                       <p className="font-semibold text-blue-600">{formatAppCurrency(invoice.profit)}</p>
                      </div>
                   </div>
                                      <div className="mt-3 flex items-center justify-between">
@@ -309,13 +315,13 @@ const MySales = () => {
                        {selectedInvoice.quantity}
                      </td>
                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                       UGX {formatNumber(selectedInvoice.unitPrice)}
+                       {formatAppCurrency(selectedInvoice.unitPrice)}
                      </td>
                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                       UGX {formatNumber(selectedInvoice.totalPrice)}
+                       {formatAppCurrency(selectedInvoice.totalPrice)}
                      </td>
                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                       UGX {formatNumber(selectedInvoice.profit)}
+                       {formatAppCurrency(selectedInvoice.profit)}
                      </td>
                    </tr>
                  </tbody>
@@ -328,11 +334,11 @@ const MySales = () => {
                          <div className="flex justify-between items-center">
                <div>
                  <p className="text-sm text-gray-500 mb-1">Total Profit</p>
-                 <p className="text-2xl font-bold text-green-600">UGX {formatNumber(selectedInvoice.profit)}</p>
+                 <p className="text-2xl font-bold text-green-600">{formatAppCurrency(selectedInvoice.profit)}</p>
                </div>
                <div>
                  <p className="text-sm text-gray-500 mb-1">Total Amount</p>
-                 <p className="text-2xl font-bold text-blue-600">UGX {formatNumber(selectedInvoice.totalPrice)}</p>
+                 <p className="text-2xl font-bold text-blue-600">{formatAppCurrency(selectedInvoice.totalPrice)}</p>
                </div>
              </div>
           </div>

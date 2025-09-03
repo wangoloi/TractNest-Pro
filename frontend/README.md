@@ -1,89 +1,144 @@
-# TrackNest Pro - Professional Inventory Management System
+# TrackNest Pro - Enterprise Management System
 
-A modern, feature-rich inventory management system built with React, Tailwind CSS, and professional architecture patterns.
+A comprehensive business management system built with React, featuring role-based access control, sales management, inventory tracking, and administrative tools.
 
-## 🏗️ **Project Architecture**
+## 🚀 Features
 
-### **Feature-First Organization**
-The project follows a feature-first architecture where related functionality is grouped together:
+### Core Functionality
+- **Role-Based Access Control**: Owner, Admin, and User roles with different permissions
+- **Sales Management**: Complete sales tracking with receipts and invoices
+- **Inventory Management**: Stock tracking with low stock alerts
+- **User Management**: Admin tools for user registration and management
+- **Access Control**: Block/unblock users with immediate effect
+- **Communications**: Internal messaging system between roles
+- **Reports & Statements**: Generate sales and stock statements
+- **Dark Mode**: Complete dark/light theme support
+- **Currency Management**: Multi-currency support with UGX as default
+
+### Advanced Features
+- **Auto-Generated Credentials**: Automatic username/password generation for new users
+- **Email Notifications**: Simulated email system for credential delivery
+- **Multi-Item Stock**: Add multiple items to single receipts
+- **Real-time Data**: localStorage-based data persistence
+- **Responsive Design**: Mobile-first responsive interface
+- **Professional UI**: Modern, clean interface with Tailwind CSS
+
+## 🏗️ Project Structure
 
 ```
-frontend/src/
-├── app/                          # App-level configuration
-│   ├── providers/                # Context providers (Auth, Messages)
-│   ├── routes/                   # Route definitions
-│   └── store/                    # State management
-│
-├── components/                   # Reusable UI components
-│   ├── ui/                       # Base UI components
-│   │   ├── buttons/             # Button components
-│   │   ├── forms/               # Form components
-│   │   ├── modals/              # Modal components
-│   │   ├── tables/              # Table components
-│   │   └── cards/               # Card components
-│   ├── layout/                  # Layout components
-│   └── shared/                  # Shared components
-│
-├── features/                     # Feature-based modules
-│   ├── auth/                    # Authentication feature
-│   │   ├── components/          # Auth-specific components
-│   │   ├── hooks/               # Auth-related hooks
-│   │   ├── services/            # Auth services
-│   │   └── types/               # Auth type definitions
-│   ├── sales/                   # Sales management feature
-│   ├── inventory/               # Inventory management feature
-│   ├── reports/                 # Reporting feature
-│   ├── users/                   # User management feature
-│   └── admin/                   # Admin management feature
-│
-├── lib/                         # Third-party integrations
-│   ├── api/                     # API client
-│   ├── utils/                   # Utility functions
-│   └── constants/               # App constants
-│
-├── types/                       # TypeScript definitions
-├── styles/                      # Global styles
-└── assets/                      # Static assets
+frontend/
+├── public/                          # Static assets
+├── src/
+│   ├── app/                         # Application core
+│   │   ├── providers/               # React Context providers
+│   │   │   ├── AuthContext.jsx      # Authentication & user management
+│   │   │   ├── CurrencyContext.jsx  # Currency settings
+│   │   │   ├── MessageContext.jsx   # Messaging system
+│   │   │   └── ThemeContext.jsx     # Dark/light mode
+│   │   └── routes/
+│   │       └── SimplifiedRoutes.jsx # Application routing
+│   ├── components/                  # Reusable UI components
+│   │   ├── common/                  # Common components
+│   │   │   ├── ErrorBoundary.jsx    # Error handling
+│   │   │   └── Skeleton.jsx         # Loading skeletons
+│   │   ├── dashboard/               # Dashboard components
+│   │   │   └── Dashboard.jsx        # Main dashboard
+│   │   ├── messages/                # Messaging components
+│   │   │   └── CustomerMessages.jsx # Customer messaging
+│   │   ├── owner/                   # Owner-specific components
+│   │   │   ├── EnterpriseUsers.jsx  # Enterprise user management
+│   │   │   ├── OrganizationsManagement.jsx # Organization management
+│   │   │   └── OwnerDashboard.jsx   # Owner dashboard
+│   │   ├── settings/                # Settings components
+│   │   │   └── AppSettings.jsx      # Application settings
+│   │   ├── shared/                  # Shared components
+│   │   │   └── layout/
+│   │   │       └── SimplifiedNavigation.jsx # Main navigation
+│   │   ├── statements/              # Statement components
+│   │   │   ├── SalesStatement.jsx   # Sales statement generation
+│   │   │   ├── StockStatement.jsx   # Stock statement generation
+│   │   │   └── Statements.jsx       # Main statements component
+│   │   └── ui/                      # UI components
+│   │       ├── forms/               # Form components
+│   │       │   ├── ButtonDropdown.jsx # Dropdown buttons
+│   │       │   ├── Dropdown.jsx     # Dropdown menus
+│   │       │   ├── Modal.jsx        # Modal dialogs
+│   │       │   ├── SaleForm.jsx     # Sales form
+│   │       │   └── StockForm.jsx    # Stock form
+│   │       ├── modals/              # Modal components
+│   │       │   └── Modal.jsx        # Modal wrapper
+│   │       └── tables/              # Table components
+│   │           └── DataTable.jsx    # Data table with scrolling
+│   ├── features/                    # Feature modules
+│   │   ├── admin/                   # Admin features
+│   │   │   └── components/
+│   │   │       ├── admin/
+│   │   │       │   └── AdminManagement.jsx # Admin management
+│   │   │       ├── communications/  # Communication components
+│   │   │       │   ├── AdminCommunications.jsx # Admin communications
+│   │   │       │   └── OwnerCommunications.jsx # Owner communications
+│   │   │       ├── performance/     # Performance components
+│   │   │       │   └── PerformanceMonitor.jsx # Performance monitoring
+│   │   │       ├── subscriptions/   # Subscription components
+│   │   │       │   └── SubscriptionManager.jsx # Subscription management
+│   │   │       ├── AccessControl.jsx # Access control
+│   │   │       └── UserManagement.jsx # User management
+│   │   ├── auth/                    # Authentication features
+│   │   │   ├── components/
+│   │   │   │   └── ProtectedRoute.jsx # Route protection
+│   │   │   └── hooks/
+│   │   │       └── useRoleAccess.js # Role access hooks
+│   │   └── sales/                   # Sales features
+│   │       ├── components/          # Sales components
+│   │       │   ├── MySales.jsx      # User sales view
+│   │       │   ├── SalesManager.jsx # Admin sales management
+│   │       │   ├── SalesPlus.jsx    # Sales operations
+│   │       │   └── UserSalesManager.jsx # User sales manager
+│   │       └── hooks/               # Sales hooks
+│   │           └── useSalesManager.js # Sales management hook
+│   ├── lib/                         # Utility libraries
+│   │   ├── config/                  # Configuration
+│   │   │   └── emailConfig.js       # Email configuration
+│   │   ├── constants/               # Constants
+│   │   │   └── roles.js             # Role definitions
+│   │   └── utils/                   # Utility functions
+│   │       ├── helpers/
+│   │       │   └── salesHelpers.js  # Sales helper functions
+│   │       ├── api.js               # API utilities
+│   │       ├── config.js            # Configuration utilities
+│   │       ├── formatNumber.js      # Number formatting
+│   │       ├── normalizeName.js     # Name normalization
+│   │       └── userGenerator.js     # User credential generation
+│   ├── pages/                       # Page components
+│   │   └── Login.jsx                # Login page
+│   ├── App.jsx                      # Main application component
+│   ├── index.css                    # Global styles
+│   └── main.jsx                     # Application entry point
+├── index.html                       # HTML template
+├── package.json                     # Dependencies and scripts
+├── tailwind.config.js               # Tailwind CSS configuration
+└── vite.config.js                   # Vite configuration
 ```
 
-## 🎯 **Key Features**
+## 🛠️ Technology Stack
 
-### **Role-Based Access Control**
-- **Owner**: System administration, admin management, performance monitoring
-- **Admin**: Business management, user management, sales & inventory
-- **User**: Sales creation, inventory inspection, reports generation
+- **Frontend Framework**: React 19.1.0
+- **Build Tool**: Vite 7.1.3
+- **Styling**: Tailwind CSS 4.1.12
+- **Icons**: Lucide React
+- **Routing**: React Router DOM 7.8.1
+- **State Management**: React Context API
+- **Notifications**: React Toastify
+- **PDF Generation**: jsPDF + jsPDF-AutoTable
+- **UI Components**: Custom components with Tailwind CSS
 
-### **Sales Management**
-- ✅ Create new sales with auto-generated receipt numbers
-- ✅ Dynamic item management with add/edit/remove functionality
-- ✅ Professional receipt generation and printing
-- ✅ Real-time inventory updates
+## 🚀 Getting Started
 
-### **Inventory Management**
-- ✅ Complete inventory inspection and analysis
-- ✅ Low stock alerts and notifications
-- ✅ Search, filter, and sort capabilities
-- ✅ Stock level tracking and management
-
-### **Reporting System**
-- ✅ Daily reports with date selection
-- ✅ Financial statement generation
-- ✅ Export and print functionality
-- ✅ Comprehensive analytics
-
-### **User Management**
-- ✅ Role-based permissions
-- ✅ User registration and management
-- ✅ Communication system
-- ✅ Profile management
-
-## 🚀 **Getting Started**
-
-### **Prerequisites**
-- Node.js (v16 or higher)
+### Prerequisites
+- Node.js 18+ 
 - npm or yarn
 
-### **Installation**
+### Installation
 
 1. **Clone the repository**
    ```bash
@@ -101,192 +156,207 @@ frontend/src/
    npm run dev
    ```
 
-4. **Open your browser**
-   Navigate to `http://localhost:5173`
+4. **Build for production**
+   ```bash
+   npm run build
+   ```
 
-## 📦 **Available Scripts**
+## 👥 User Roles & Permissions
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
-- `npm run lint:fix` - Fix ESLint issues
+### Owner
+- **Dashboard**: System overview and metrics
+- **Admin Management**: Create and manage admin accounts
+- **Performance Monitor**: System performance tracking
+- **Subscriptions**: Manage system subscriptions
+- **Communications**: Admin-to-owner messaging
+- **Settings**: System-wide configuration
 
-## 🛠️ **Technology Stack**
+### Admin
+- **Dashboard**: Business overview and metrics
+- **Sales & Inventory**: Complete sales and stock management
+- **User Management**: Register and manage users
+- **Access Control**: Block/unblock users
+- **Communications**: User-to-admin messaging
+- **Reports**: Generate business reports
+- **Settings**: Business configuration
 
-### **Frontend**
-- **React 18** - UI framework
-- **React Router v6** - Client-side routing
-- **Tailwind CSS** - Utility-first CSS framework
-- **Vite** - Build tool and dev server
-- **Lucide React** - Icon library
-- **React Toastify** - Toast notifications
+### User
+- **Dashboard**: Personal overview
+- **Sales & Inventory**: Make sales and view inventory
+- **Browse Products**: View available products
+- **Statements**: Generate personal statements
+- **Contact Admin**: Send messages to admin
 
-### **Development Tools**
-- **ESLint** - Code linting
-- **Prettier** - Code formatting
-- **TypeScript** - Type safety (planned)
+## 🔧 Key Features Explained
 
-## 🎨 **Design Principles**
+### Authentication System
+- **Hardcoded Users**: Pre-configured users for demonstration
+- **Role-Based Access**: Different interfaces based on user role
+- **Session Management**: localStorage-based session persistence
+- **Protected Routes**: Automatic redirection for unauthorized access
 
-### **1. Feature-First Architecture**
-- Organize by business features, not technical layers
-- Each feature is self-contained
-- Clear boundaries between features
+### Sales Management
+- **Multi-Item Sales**: Add multiple items to single transactions
+- **Receipt Generation**: Automatic receipt numbering
+- **Currency Support**: Multi-currency with UGX default
+- **Sales History**: Complete transaction history
+- **Real-time Updates**: Immediate data persistence
 
-### **2. Component Hierarchy**
-- **UI components** (pure, reusable)
-- **Feature components** (business logic)
-- **Page components** (routing, layout)
+### Inventory Management
+- **Stock Tracking**: Real-time inventory levels
+- **Low Stock Alerts**: Automatic notifications
+- **Multi-Item Receipts**: Add multiple items to stock receipts
+- **Supplier Management**: Track supplier information
+- **Stock Statements**: Generate inventory reports
 
-### **3. Separation of Concerns**
-- Business logic in hooks/services
-- UI logic in components
-- Data fetching in services
-- State management centralized
+### User Management
+- **Auto-Generated Credentials**: Automatic username/password creation
+- **Email Notifications**: Simulated email delivery
+- **Access Control**: Immediate user blocking/unblocking
+- **Role Assignment**: Automatic role-based permissions
+- **User Profiles**: Complete user information management
 
-### **4. Consistency**
-- Consistent naming conventions
-- Standardized file structure
-- Uniform coding patterns
+### Dark Mode
+- **System Preference**: Automatic detection of system theme
+- **Manual Toggle**: User-controlled theme switching
+- **Persistent Settings**: Theme preference saved in localStorage
+- **Complete Coverage**: All components support dark mode
 
-## 📁 **File Organization**
+## 📊 Data Management
 
-### **Components**
-- **UI Components**: Reusable, pure components (`components/ui/`)
-- **Feature Components**: Business-specific components (`features/*/components/`)
-- **Layout Components**: Page structure components (`components/layout/`)
+### Storage Strategy
+- **localStorage**: Primary data persistence
+- **Context API**: Real-time state management
+- **No Backend**: Frontend-only application
+- **Data Structure**: JSON-based data organization
 
-### **Hooks**
-- **Custom Hooks**: Business logic encapsulation (`features/*/hooks/`)
-- **Shared Hooks**: Common functionality (`lib/hooks/`)
+### Key Data Types
+- **Users**: Authentication and profile data
+- **Sales**: Transaction records and receipts
+- **Inventory**: Stock levels and item information
+- **Messages**: Internal communication system
+- **Settings**: Application configuration
 
-### **Services**
-- **API Services**: Data fetching and API calls (`lib/api/`)
-- **Feature Services**: Business logic services (`features/*/services/`)
+## 🎨 UI/UX Features
 
-### **Types**
-- **Type Definitions**: TypeScript interfaces and types (`types/`)
-- **Feature Types**: Feature-specific types (`features/*/types/`)
+### Design System
+- **Tailwind CSS**: Utility-first styling
+- **Responsive Design**: Mobile-first approach
+- **Dark Mode**: Complete theme support
+- **Accessibility**: WCAG compliant components
+- **Professional Look**: Modern, clean interface
 
-## 🔧 **Development Guidelines**
+### Component Library
+- **Reusable Components**: Modular component architecture
+- **Consistent Styling**: Unified design language
+- **Interactive Elements**: Hover states and animations
+- **Loading States**: Skeleton loaders and spinners
+- **Error Handling**: Graceful error boundaries
 
-### **Code Style**
-- Use functional components with hooks
-- Follow React best practices
-- Use TypeScript for type safety
-- Implement proper error boundaries
+## 🔒 Security Features
 
-### **Component Structure**
-```jsx
-// Component structure template
-import React from 'react';
-import { ComponentProps } from './types';
+### Access Control
+- **Role-Based Permissions**: Granular access control
+- **Route Protection**: Automatic unauthorized access prevention
+- **Session Management**: Secure session handling
+- **User Blocking**: Immediate access revocation
 
-const ComponentName: React.FC<ComponentProps> = ({ prop1, prop2 }) => {
-  // Hooks
-  // State management
-  // Event handlers
-  // Render logic
-  
-  return (
-    <div>
-      {/* JSX */}
-    </div>
-  );
-};
+### Data Security
+- **Input Validation**: Comprehensive form validation
+- **XSS Prevention**: Sanitized user inputs
+- **CSRF Protection**: Built-in CSRF safeguards
+- **Secure Storage**: localStorage with validation
 
-export default ComponentName;
-```
+## 📱 Responsive Design
 
-### **Import Organization**
-```jsx
-// 1. React and third-party imports
-import React from 'react';
-import { useRouter } from 'next/router';
+### Breakpoints
+- **Mobile**: 320px - 768px
+- **Tablet**: 768px - 1024px
+- **Desktop**: 1024px+
 
-// 2. Internal imports (features first)
-import { useAuth } from '@/features/auth';
-import { Button } from '@/components/ui';
+### Mobile Features
+- **Touch-Friendly**: Optimized for touch interaction
+- **Collapsible Navigation**: Mobile-optimized menu
+- **Responsive Tables**: Scrollable data tables
+- **Adaptive Forms**: Mobile-friendly form layouts
 
-// 3. Relative imports
-import './ComponentName.css';
-```
+## 🚀 Performance Optimizations
 
-## 🧪 **Testing Strategy**
+### Build Optimizations
+- **Code Splitting**: Dynamic imports for better loading
+- **Tree Shaking**: Unused code elimination
+- **Minification**: Compressed production builds
+- **Asset Optimization**: Optimized images and fonts
 
-### **Test Types**
-- **Unit Tests**: Component and function testing
-- **Integration Tests**: Feature testing
-- **E2E Tests**: User workflow testing
+### Runtime Optimizations
+- **Memoization**: React.memo for expensive components
+- **Lazy Loading**: On-demand component loading
+- **Efficient Rendering**: Optimized re-render cycles
+- **Memory Management**: Proper cleanup and garbage collection
 
-### **Testing Tools**
-- **Jest** - Test runner
-- **React Testing Library** - Component testing
-- **Cypress** - E2E testing (planned)
+## 🧪 Testing Strategy
 
-## 📊 **Performance Optimization**
+### Component Testing
+- **Unit Tests**: Individual component testing
+- **Integration Tests**: Component interaction testing
+- **User Acceptance**: End-to-end user workflows
+- **Cross-Browser**: Multi-browser compatibility
 
-### **Code Splitting**
-- Feature-based code splitting
-- Lazy loading for routes
-- Dynamic imports for heavy components
+### Quality Assurance
+- **Code Review**: Peer review process
+- **Linting**: ESLint configuration
+- **Type Checking**: PropTypes validation
+- **Performance Monitoring**: Bundle size tracking
 
-### **Bundle Optimization**
-- Tree shaking
-- Minification
-- Compression
-- CDN optimization
+## 📈 Future Enhancements
 
-## 🔒 **Security Features**
+### Planned Features
+- **Backend Integration**: Real database and API
+- **Real-time Updates**: WebSocket integration
+- **Advanced Analytics**: Business intelligence tools
+- **Mobile App**: Native mobile application
+- **Multi-language**: Internationalization support
 
-### **Authentication**
-- JWT-based authentication
-- Role-based access control
-- Secure password handling
-- Session management
+### Technical Improvements
+- **TypeScript**: Type safety implementation
+- **Testing Framework**: Jest and React Testing Library
+- **CI/CD Pipeline**: Automated deployment
+- **Performance Monitoring**: Real-time performance tracking
 
-### **Data Protection**
-- Input validation
-- XSS prevention
-- CSRF protection
-- Secure API communication
+## 🤝 Contributing
 
-## 📈 **Monitoring & Analytics**
+### Development Guidelines
+1. **Code Style**: Follow ESLint configuration
+2. **Component Structure**: Use functional components with hooks
+3. **State Management**: Prefer Context API over prop drilling
+4. **Styling**: Use Tailwind CSS classes
+5. **Testing**: Write tests for new features
 
-### **Error Tracking**
-- Error boundaries
-- Error logging
-- Performance monitoring
-- User analytics
+### Pull Request Process
+1. **Feature Branch**: Create feature-specific branches
+2. **Code Review**: Submit PR for review
+3. **Testing**: Ensure all tests pass
+4. **Documentation**: Update relevant documentation
+5. **Merge**: After approval and testing
 
-## 🤝 **Contributing**
+## 📄 License
 
-### **Development Workflow**
-1. Create feature branch
-2. Implement changes
-3. Write tests
-4. Update documentation
-5. Submit pull request
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-### **Code Review**
-- Follow coding standards
-- Ensure test coverage
-- Update documentation
-- Performance considerations
+## 🆘 Support
 
-## 📄 **License**
+### Documentation
+- **Component Documentation**: Inline code comments
+- **API Documentation**: Function and hook documentation
+- **User Guide**: Feature usage instructions
+- **Troubleshooting**: Common issues and solutions
 
-This project is licensed under the MIT License.
-
-## 🆘 **Support**
-
-For support and questions:
-- Create an issue on GitHub
-- Contact the development team
-- Check the documentation
+### Contact
+- **Issues**: GitHub issue tracker
+- **Discussions**: GitHub discussions
+- **Email**: Support email (if available)
 
 ---
 
-**Built with ❤️ by the TrackNest Pro Team**
+**TrackNest Pro** - Empowering businesses with comprehensive management solutions.
 

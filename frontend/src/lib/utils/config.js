@@ -4,7 +4,7 @@
 
 // Validate required environment variables
 const requiredEnvVars = {
-  VITE_API_URL: import.meta.env.VITE_API_URL || 'http://localhost:3001'
+  VITE_API_URL: 'http://localhost:5000' // Hardcoded for now
 };
 console.log(requiredEnvVars);
 // Validate API URL format
@@ -18,13 +18,13 @@ const validateApiUrl = (url) => {
 };
 
 if (!validateApiUrl(requiredEnvVars.VITE_API_URL)) {
-  console.warn('Invalid VITE_API_URL format. Using default: http://localhost:3001');
-  requiredEnvVars.VITE_API_URL = 'http://localhost:3001';
+  console.warn('Invalid VITE_API_URL format. Using default: http://localhost:5000');
+  requiredEnvVars.VITE_API_URL = 'http://localhost:5000';
 }
 
 export const config = {
       api: {
-      baseURL: requiredEnvVars.VITE_API_URL
+      baseURL: `${requiredEnvVars.VITE_API_URL}/api`
     },
   app: {
     name: 'TrackNest Pro',

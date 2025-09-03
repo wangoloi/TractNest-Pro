@@ -18,7 +18,7 @@ import {
 import { toast } from 'react-toastify';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { formatNumber } from '../../utils/formatNumber';
+import { formatNumber, formatAppCurrency } from '../../../lib/utils/formatNumber';
 
 import api from '../../../lib/utils/api';
 
@@ -444,9 +444,9 @@ const SalesPlus = () => {
       const itemsData = saleItems.map(item => [
         item.name,
         item.qty.toString(),
-        `$${formatNumber(item.price)}`,
-        `$${formatNumber(item.amount)}`,
-        `$${formatNumber(item.profit)}`
+                        `${formatAppCurrency(item.price)}`,
+                `${formatAppCurrency(item.amount)}`,
+                `${formatAppCurrency(item.profit)}`
       ]);
       
       autoTable(doc, {
@@ -461,13 +461,13 @@ const SalesPlus = () => {
       // Totals
       const finalY = doc.lastAutoTable.finalY || 100;
       doc.setFontSize(12);
-      doc.text(`Subtotal: $${formatNumber(saleTotal - saleTax + saleDiscount)}`, 150, finalY + 15);
-      doc.text(`Tax (18%): $${formatNumber(saleTax)}`, 150, finalY + 25);
-      doc.text(`Discount (5%): -$${formatNumber(saleDiscount)}`, 150, finalY + 35);
+      doc.text(`Subtotal: ${formatAppCurrency(saleTotal - saleTax + saleDiscount)}`, 150, finalY + 15);
+      doc.text(`Tax (18%): ${formatAppCurrency(saleTax)}`, 150, finalY + 25);
+      doc.text(`Discount (5%): -${formatAppCurrency(saleDiscount)}`, 150, finalY + 35);
       doc.setFontSize(14);
       doc.setFont(undefined, 'bold');
-      doc.text(`Total: $${formatNumber(saleTotal)}`, 150, finalY + 50);
-      doc.text(`Profit: $${formatNumber(saleProfit)}`, 150, finalY + 60);
+      doc.text(`Total: ${formatAppCurrency(saleTotal)}`, 150, finalY + 50);
+      doc.text(`Profit: ${formatAppCurrency(saleProfit)}`, 150, finalY + 60);
     }
     
     doc.save(`invoice-${invoiceNumber}.pdf`);
@@ -950,24 +950,24 @@ const SalesPlus = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="p-4 bg-white rounded-lg border border-purple-200">
                 <h4 className="text-sm font-medium text-gray-600">Subtotal</h4>
-                <p className="text-2xl font-bold text-purple-600">${formatNumber(saleTotal - saleTax + saleDiscount)}</p>
+                <p className="text-2xl font-bold text-purple-600">{formatAppCurrency(saleTotal - saleTax + saleDiscount)}</p>
               </div>
               <div className="p-4 bg-white rounded-lg border border-purple-200">
                 <h4 className="text-sm font-medium text-gray-600">Tax (18%)</h4>
-                <p className="text-2xl font-bold text-red-600">${formatNumber(saleTax)}</p>
+                <p className="text-2xl font-bold text-red-600">{formatAppCurrency(saleTax)}</p>
               </div>
               <div className="p-4 bg-white rounded-lg border border-purple-200">
                 <h4 className="text-sm font-medium text-gray-600">Discount (5%)</h4>
-                <p className="text-2xl font-bold text-green-600">-${formatNumber(saleDiscount)}</p>
+                <p className="text-2xl font-bold text-green-600">-{formatAppCurrency(saleDiscount)}</p>
               </div>
               <div className="p-4 bg-white rounded-lg border border-purple-200">
                 <h4 className="text-sm font-medium text-gray-600">Total</h4>
-                <p className="text-2xl font-bold text-purple-600">${formatNumber(saleTotal)}</p>
+                <p className="text-2xl font-bold text-purple-600">{formatAppCurrency(saleTotal)}</p>
               </div>
             </div>
             <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
               <h4 className="text-sm font-medium text-gray-600">Estimated Profit</h4>
-              <p className="text-2xl font-bold text-green-600">${formatNumber(saleProfit)}</p>
+              <p className="text-2xl font-bold text-green-600">{formatAppCurrency(saleProfit)}</p>
             </div>
           </div>
         )}
@@ -1000,14 +1000,14 @@ const SalesPlus = () => {
               <DollarSign className="text-blue-600" size={20} />
               Total Sales
             </h3>
-            <p className="text-2xl font-bold text-blue-600">${formatNumber(totalSales.amount)}</p>
+            <p className="text-2xl font-bold text-blue-600">{formatAppCurrency(totalSales.amount)}</p>
           </div>
           <div className="p-6 bg-green-50 rounded-xl border border-green-200">
             <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
               <TrendingUp className="text-green-600" size={20} />
               Total Profit
             </h3>
-            <p className="text-2xl font-bold text-green-600">${formatNumber(totalSales.profit)}</p>
+            <p className="text-2xl font-bold text-green-600">{formatAppCurrency(totalSales.profit)}</p>
           </div>
           <div className="p-6 bg-purple-50 rounded-xl border border-purple-200">
             <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Download } from 'lucide-react';
-import { formatNumber } from '../../utils/formatNumber';
+import { formatNumber, formatAppCurrency } from '../../utils/formatNumber';
 
 const StockStatement = ({ receipts, timePeriod, customStartDate, customEndDate }) => {
   const [filteredReceipts, setFilteredReceipts] = useState([]);
@@ -86,7 +86,7 @@ const StockStatement = ({ receipts, timePeriod, customStartDate, customEndDate }
     doc.text(`Period: ${startDate.toDateString()} to ${endDate.toDateString()}`, 20, 35);
     
     // Add summary
-    doc.text(`Total Stock Value: UGX ${formatNumber(totalStockValue)}`, 20, 45);
+            doc.text(`Total Stock Value: ${formatAppCurrency(totalStockValue)}`, 20, 45);
     
     // Add receipts table
     if (filteredReceipts.length > 0) {
@@ -94,7 +94,7 @@ const StockStatement = ({ receipts, timePeriod, customStartDate, customEndDate }
         receipt.id,
         new Date(receipt.date).toLocaleDateString(),
         receipt.company,
-        `UGX ${formatNumber(receipt.total)}`
+                        `${formatAppCurrency(receipt.total)}`
       ]);
       
       autoTable(doc, {
@@ -113,7 +113,7 @@ const StockStatement = ({ receipts, timePeriod, customStartDate, customEndDate }
       // Add total
       const finalY = doc.lastAutoTable.finalY || 55;
       doc.setFontSize(14);
-      doc.text(`Total Stock Value: UGX ${formatNumber(totalStockValue)}`, 150, finalY + 15);
+              doc.text(`Total Stock Value: ${formatAppCurrency(totalStockValue)}`, 150, finalY + 15);
     } else {
       doc.text('No stock receipts found for the selected period.', 20, 65);
     }
@@ -137,7 +137,7 @@ const StockStatement = ({ receipts, timePeriod, customStartDate, customEndDate }
       
       <div className="mb-4 p-4 bg-blue-50 rounded-lg">
         <p className="text-lg font-semibold text-blue-800">
-          Total Stock Value: UGX {formatNumber(totalStockValue)}
+          Total Stock Value: {formatAppCurrency(totalStockValue)}
         </p>
       </div>
       
@@ -158,7 +158,7 @@ const StockStatement = ({ receipts, timePeriod, customStartDate, customEndDate }
                   <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{receipt.id}</td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{new Date(receipt.date).toLocaleDateString()}</td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{receipt.company}</td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">UGX {formatNumber(receipt.total)}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{formatAppCurrency(receipt.total)}</td>
                 </tr>
               ))
             ) : (

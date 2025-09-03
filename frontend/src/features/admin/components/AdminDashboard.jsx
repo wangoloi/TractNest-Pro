@@ -240,6 +240,15 @@ const AdminDashboard = () => {
           </button>
           
           <button 
+            onClick={() => navigate('/admin/access-control')}
+            className="p-4 bg-red-50 hover:bg-red-100 rounded-lg transition-colors text-left"
+          >
+            <Shield size={24} className="text-red-600 mb-2" />
+            <p className="font-medium text-gray-800">Access Control</p>
+            <p className="text-sm text-gray-600">Block/unblock users & manage access</p>
+          </button>
+          
+          <button 
             onClick={() => navigate('/customers')}
             className="p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors text-left"
           >

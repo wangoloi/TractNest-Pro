@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Save, RefreshCw, Mail, MessageSquare, Bell } from 'lucide-react';
-import api from '../../lib/utils/api';
+import { Settings, Save, RefreshCw, Mail, MessageSquare, Bell, Shield, Moon, Sun } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Dropdown from '../ui/forms/Dropdown';
+import { useCurrency } from '../../app/providers/CurrencyContext';
+import { useTheme } from '../../app/providers/ThemeContext';
 
 const AppSettings = () => {
-
+  const { updateCurrency } = useCurrency();
+  const { isDarkMode, toggleDarkMode, setTheme } = useTheme();
+  
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({});
@@ -14,17 +17,32 @@ const AppSettings = () => {
     fetchSettings();
   }, []);
 
-  const fetchSettings = async () => {
+  const fetchSettings = () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/settings');
-      const settingsData = response.data;
+      
+      // Get settings from localStorage or use defaults
+      const savedSettings = localStorage.getItem('appSettings');
+      let settingsData;
+      
+      if (savedSettings) {
+        settingsData = JSON.parse(savedSettings);
+      } else {
+        // Use default settings if none exist
+        settingsData = getDefaultSettings();
+        localStorage.setItem('appSettings', JSON.stringify(settingsData));
+      }
       
       // Initialize form data with current settings
       const initialData = {};
       settingsData.forEach(setting => {
         initialData[setting.setting_key] = setting.setting_value;
       });
+      
+      // Sync dark mode setting with current theme state from localStorage
+      const savedTheme = localStorage.getItem('theme');
+      initialData.dark_mode = savedTheme === 'dark' ? 'true' : 'false';
+      
       setFormData(initialData);
     } catch (error) {
       console.error('Error fetching settings:', error);
@@ -34,16 +52,33 @@ const AppSettings = () => {
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setSaving(true);
     try {
+      // Convert form data to settings format
       const settingsToUpdate = Object.entries(formData).map(([key, value]) => ({
-        key,
-        value: value.toString(),
-        type: 'string'
+        setting_key: key,
+        setting_value: value.toString(),
+        description: getSettingDescription(key)
       }));
 
-      await api.post('/api/settings/bulk', { settings: settingsToUpdate });
+      // Save to localStorage
+      localStorage.setItem('appSettings', JSON.stringify(settingsToUpdate));
+      
+      // Update currency context if currency changed
+      const newCurrency = formData.default_currency;
+      if (newCurrency) {
+        updateCurrency(newCurrency);
+        // Also update localStorage to ensure consistency
+        localStorage.setItem('currentCurrency', newCurrency);
+      }
+
+      // Update theme if dark mode changed
+      const newDarkMode = formData.dark_mode === 'true';
+      if (newDarkMode !== isDarkMode) {
+        setTheme(newDarkMode ? 'dark' : 'light');
+      }
+      
       toast.success('Settings saved successfully');
       fetchSettings(); // Refresh settings
     } catch (error) {
@@ -59,6 +94,27 @@ const AppSettings = () => {
       ...prev,
       [key]: value
     }));
+  };
+
+  const getSettingDescription = (key) => {
+    const descriptions = {
+      app_name: 'Application name displayed in the interface',
+      company_name: 'Company name for receipts and invoices',
+      company_email: 'Primary contact email for customer communications',
+      company_phone: 'Primary contact phone number',
+      default_currency: 'Default currency for transactions',
+      low_stock_threshold: 'Minimum stock level before low stock alerts',
+      auto_backup_enabled: 'Enable automatic database backups',
+      email_notifications: 'Enable email notifications for important events',
+      whatsapp_integration: 'Enable WhatsApp integration for customer communications',
+      session_timeout: 'Session timeout in minutes',
+      password_policy: 'Password strength policy',
+      two_factor_auth: 'Enable two-factor authentication',
+      backup_frequency: 'Backup frequency',
+      data_retention: 'Data retention period in days',
+      dark_mode: 'Enable dark mode for the application interface'
+    };
+    return descriptions[key] || 'Setting description';
   };
 
   const getDefaultSettings = () => {
@@ -132,14 +188,19 @@ const AppSettings = () => {
         setting_key: 'data_retention',
         setting_value: '90',
         description: 'Data retention period in days'
+      },
+      {
+        setting_key: 'dark_mode',
+        setting_value: 'false',
+        description: 'Enable dark mode for the application interface'
       }
     ];
   };
 
-  const initializeDefaultSettings = async () => {
+  const initializeDefaultSettings = () => {
     try {
       const defaultSettings = getDefaultSettings();
-      await api.post('/api/settings/bulk', { settings: defaultSettings });
+      localStorage.setItem('appSettings', JSON.stringify(defaultSettings));
       toast.success('Default settings initialized');
       fetchSettings();
     } catch (error) {
@@ -191,7 +252,7 @@ const AppSettings = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* General Settings */}
         <div className="space-y-6">
           <div className="border-b border-gray-200 pb-4">
@@ -231,6 +292,34 @@ const AppSettings = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
+              Company Email
+            </label>
+            <input
+              type="email"
+              value={formData.company_email || ''}
+              onChange={(e) => handleInputChange('company_email', e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="admin@company.com"
+            />
+            <p className="text-xs text-gray-500 mt-1">Primary contact email for customer communications</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Company Phone
+            </label>
+            <input
+              type="tel"
+              value={formData.company_phone || ''}
+              onChange={(e) => handleInputChange('company_phone', e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="+1234567890"
+            />
+            <p className="text-xs text-gray-500 mt-1">Primary contact phone number</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Default Currency
             </label>
             <Dropdown
@@ -260,25 +349,80 @@ const AppSettings = () => {
             />
             <p className="text-xs text-gray-500 mt-1">Minimum stock level before low stock alerts</p>
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Dark Mode
+            </label>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => handleInputChange('dark_mode', 'false')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                  formData.dark_mode === 'false' || !formData.dark_mode
+                    ? 'bg-blue-500 text-white border-blue-500'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                <Sun size={16} />
+                Light Mode
+              </button>
+              <button
+                type="button"
+                onClick={() => handleInputChange('dark_mode', 'true')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                  formData.dark_mode === 'true'
+                    ? 'bg-gray-800 text-white border-gray-800'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                <Moon size={16} />
+                Dark Mode
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Choose your preferred interface theme</p>
+          </div>
         </div>
 
-        {/* Communication Settings */}
+        {/* Communication & Security Settings */}
         <div className="space-y-6">
           <div className="border-b border-gray-200 pb-4">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
               <MessageSquare size={20} className="text-gray-600" />
-              Communication Settings
+              Communication & Security
             </h3>
           </div>
-        </div>
 
-        {/* Security & Backup Settings */}
-        <div className="space-y-6">
-          <div className="border-b border-gray-200 pb-4">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <Shield size={20} className="text-gray-600" />
-              Security & Backup
-            </h3>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Email Notifications
+            </label>
+            <Dropdown
+              options={[
+                { value: 'true', label: 'Enabled' },
+                { value: 'false', label: 'Disabled' }
+              ]}
+              value={formData.email_notifications || 'true'}
+              onChange={(value) => handleInputChange('email_notifications', value)}
+              placeholder="Select notification setting..."
+            />
+            <p className="text-xs text-gray-500 mt-1">Enable email notifications for important events</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              WhatsApp Integration
+            </label>
+            <Dropdown
+              options={[
+                { value: 'true', label: 'Enabled' },
+                { value: 'false', label: 'Disabled' }
+              ]}
+              value={formData.whatsapp_integration || 'false'}
+              onChange={(value) => handleInputChange('whatsapp_integration', value)}
+              placeholder="Select WhatsApp setting..."
+            />
+            <p className="text-xs text-gray-500 mt-1">Enable WhatsApp integration for customer communications</p>
           </div>
 
           <div>
@@ -331,6 +475,22 @@ const AppSettings = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
+              Auto Backup
+            </label>
+            <Dropdown
+              options={[
+                { value: 'true', label: 'Enabled' },
+                { value: 'false', label: 'Disabled' }
+              ]}
+              value={formData.auto_backup_enabled || 'true'}
+              onChange={(value) => handleInputChange('auto_backup_enabled', value)}
+              placeholder="Select backup setting..."
+            />
+            <p className="text-xs text-gray-500 mt-1">Enable automatic database backups</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Backup Frequency
             </label>
             <select
@@ -359,82 +519,6 @@ const AppSettings = () => {
               max="3650"
             />
             <p className="text-xs text-gray-500 mt-1">How long to keep backup data</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Company Email
-            </label>
-            <input
-              type="email"
-              value={formData.company_email || ''}
-              onChange={(e) => handleInputChange('company_email', e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="admin@company.com"
-            />
-            <p className="text-xs text-gray-500 mt-1">Primary contact email for customer communications</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Company Phone
-            </label>
-            <input
-              type="tel"
-              value={formData.company_phone || ''}
-              onChange={(e) => handleInputChange('company_phone', e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="+1234567890"
-            />
-            <p className="text-xs text-gray-500 mt-1">Primary contact phone number</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email Notifications
-            </label>
-            <Dropdown
-              options={[
-                { value: 'true', label: 'Enabled' },
-                { value: 'false', label: 'Disabled' }
-              ]}
-              value={formData.email_notifications || 'true'}
-              onChange={(value) => handleInputChange('email_notifications', value)}
-              placeholder="Select notification setting..."
-            />
-            <p className="text-xs text-gray-500 mt-1">Enable email notifications for important events</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              WhatsApp Integration
-            </label>
-            <Dropdown
-              options={[
-                { value: 'true', label: 'Enabled' },
-                { value: 'false', label: 'Disabled' }
-              ]}
-              value={formData.whatsapp_integration || 'false'}
-              onChange={(value) => handleInputChange('whatsapp_integration', value)}
-              placeholder="Select WhatsApp setting..."
-            />
-            <p className="text-xs text-gray-500 mt-1">Enable WhatsApp integration for customer communications</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Auto Backup
-            </label>
-            <Dropdown
-              options={[
-                { value: 'true', label: 'Enabled' },
-                { value: 'false', label: 'Disabled' }
-              ]}
-              value={formData.auto_backup_enabled || 'true'}
-              onChange={(value) => handleInputChange('auto_backup_enabled', value)}
-              placeholder="Select backup setting..."
-            />
-            <p className="text-xs text-gray-500 mt-1">Enable automatic database backups</p>
           </div>
         </div>
       </div>
