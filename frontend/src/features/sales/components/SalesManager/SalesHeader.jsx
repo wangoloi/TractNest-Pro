@@ -43,3 +43,7 @@ const SalesHeader = ({ isAdmin, setShowNewSaleModal, setShowAddStockModal }) => 
 export default SalesHeader;
 
 
+
+
+
+

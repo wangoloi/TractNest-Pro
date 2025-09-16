@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import { mockSales, mockInventory } from "../../../data/mock/salesData";
 
 export const useSalesManager = () => {
   const [sales, setSales] = useState([]);
@@ -47,9 +46,9 @@ export const useSalesManager = () => {
       // Simulate API call delay
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // Load sales from localStorage or use mock data
+      // Load sales from localStorage
       const savedSales = localStorage.getItem("sales");
-      const salesData = savedSales ? JSON.parse(savedSales) : mockSales;
+      const salesData = savedSales ? JSON.parse(savedSales) : [];
       setSales(salesData);
 
       // Load stock receipts from localStorage
@@ -57,9 +56,9 @@ export const useSalesManager = () => {
       const stockReceiptsData = savedStockReceipts ? JSON.parse(savedStockReceipts) : [];
       setStockReceipts(stockReceiptsData);
 
-      // Load inventory from localStorage or use mock data
+      // Load inventory from localStorage
       const savedInventory = localStorage.getItem("inventory");
-      const inventoryData = savedInventory ? JSON.parse(savedInventory) : mockInventory;
+      const inventoryData = savedInventory ? JSON.parse(savedInventory) : [];
       setInventory(inventoryData);
     } catch (error) {
       console.error("Error fetching data:", error);

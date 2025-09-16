@@ -9,7 +9,7 @@ async function initializeData() {
     if (!existingOwner) {
       console.log('🔧 Creating default owner user...');
       
-      // Create owner user
+      // Create owner user (password will be hashed by the beforeCreate hook)
       const owner = await User.create({
         username: 'bachawa',
         password: 'bachawa@1999',

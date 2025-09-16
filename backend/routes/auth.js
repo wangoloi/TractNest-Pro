@@ -62,7 +62,7 @@ router.post('/login', async (req, res) => {
 // Register route (only for owner to create admins)
 router.post('/register', auth, async (req, res) => {
   try {
-    const { username, password, name, email, phone, role, businessData } = req.body;
+    const { username, password, name, email, phone, role, businessData, generatedUsername, generatedPassword } = req.body;
 
     // Only owner can register new users
     if (req.user.role !== 'owner') {
@@ -84,7 +84,7 @@ router.post('/register', auth, async (req, res) => {
       return res.status(400).json({ error: 'Username or email already exists.' });
     }
 
-    // Create user
+    // Create user with generated credentials
     const user = await User.create({
       username,
       password,
@@ -93,7 +93,10 @@ router.post('/register', auth, async (req, res) => {
       phone,
       role: role || 'admin',
       status: 'active',
-      access_level: 'full'
+      access_level: 'full',
+      generated_username: generatedUsername,
+      generated_password: generatedPassword,
+      credentials_generated_at: new Date()
     });
 
     res.status(201).json({
@@ -103,7 +106,10 @@ router.post('/register', auth, async (req, res) => {
         username: user.username,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        generated_username: user.generated_username,
+        generated_password: user.generated_password,
+        credentials_generated_at: user.credentials_generated_at
       }
     });
   } catch (error) {

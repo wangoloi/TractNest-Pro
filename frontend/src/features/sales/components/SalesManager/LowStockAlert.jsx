@@ -42,3 +42,7 @@ const LowStockAlert = ({ showLowStockAlert, lowStockItems, setView, setShowLowSt
 export default LowStockAlert;
 
 
+
+
+
+

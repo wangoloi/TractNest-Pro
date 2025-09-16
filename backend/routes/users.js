@@ -24,7 +24,7 @@ router.get('/', auth, async (req, res) => {
             attributes: ['id', 'plan', 'status', 'amount', 'billing_cycle', 'next_payment']
           }
         ],
-        attributes: { exclude: ['password'] }
+        attributes: { exclude: ['password', 'generated_password'] }
       });
     } else if (req.user.role === 'admin') {
       // Admin can only see users in their business
@@ -49,7 +49,7 @@ router.get('/', auth, async (req, res) => {
             attributes: ['id', 'plan', 'status', 'amount', 'billing_cycle', 'next_payment']
           }
         ],
-        attributes: { exclude: ['password'] }
+        attributes: { exclude: ['password', 'generated_password'] }
       });
     } else {
       // Regular users can only see themselves
@@ -67,7 +67,7 @@ router.get('/', auth, async (req, res) => {
             attributes: ['id', 'plan', 'status', 'amount', 'billing_cycle', 'next_payment']
           }
         ],
-        attributes: { exclude: ['password'] }
+        attributes: { exclude: ['password', 'generated_password'] }
       });
     }
 
@@ -157,7 +157,7 @@ router.put('/:id', auth, async (req, res) => {
   }
 });
 
-// Delete user (only owner can delete)
+// Delete user by ID (only owner can delete)
 router.delete('/:id', auth, authorize('owner'), async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
@@ -177,6 +177,30 @@ router.delete('/:id', auth, authorize('owner'), async (req, res) => {
     res.json({ message: 'User deleted successfully' });
   } catch (error) {
     console.error('Delete user error:', error);
+    res.status(500).json({ error: 'Failed to delete user.' });
+  }
+});
+
+// Delete user by username (only owner can delete)
+router.delete('/username/:username', auth, authorize('owner'), async (req, res) => {
+  try {
+    const { username } = req.params;
+
+    // Prevent owner from deleting themselves
+    if (username === req.user.username) {
+      return res.status(400).json({ error: 'Cannot delete your own account.' });
+    }
+
+    const user = await User.findOne({ where: { username } });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    await user.destroy();
+
+    res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Delete user by username error:', error);
     res.status(500).json({ error: 'Failed to delete user.' });
   }
 });
@@ -230,8 +254,13 @@ router.patch('/:id/status', auth, authorize('owner'), async (req, res) => {
 // Create admin user with business (owner only)
 router.post('/create-admin', auth, async (req, res) => {
   try {
+    console.log('🚀 Create-admin endpoint hit!');
+    console.log('👤 Request user:', req.user);
+    console.log('📋 Request body:', req.body);
+    
     // Only owner can create admin users
     if (req.user.role !== 'owner') {
+      console.log('❌ Access denied - user is not owner');
       return res.status(403).json({ error: 'Only owner can create admin users.' });
     }
 
@@ -247,8 +276,26 @@ router.post('/create-admin', auth, async (req, res) => {
       businessEmail 
     } = req.body;
 
+    console.log('📥 Received admin creation request:', {
+      firstName,
+      lastName,
+      email,
+      phone,
+      businessName,
+      businessType,
+      businessAddress,
+      businessPhone,
+      businessEmail
+    });
+
     // Validate required fields
     if (!firstName || !lastName || !email || !businessName) {
+      console.log('❌ Validation failed - missing required fields:', {
+        hasFirstName: !!firstName,
+        hasLastName: !!lastName,
+        hasEmail: !!email,
+        hasBusinessName: !!businessName
+      });
       return res.status(400).json({ error: 'Missing required fields: firstName, lastName, email, businessName' });
     }
 
@@ -268,6 +315,18 @@ router.post('/create-admin', auth, async (req, res) => {
     }
 
     // Create admin user
+    console.log('🔄 Creating admin user with data:', {
+      username,
+      name: `${firstName} ${lastName}`.trim(),
+      email,
+      phone: phone || '',
+      role: 'admin',
+      status: 'active',
+      access_level: 'full',
+      generated_username: username,
+      generated_password: password
+    });
+    
     const admin = await User.create({
       username,
       password,
@@ -276,10 +335,30 @@ router.post('/create-admin', auth, async (req, res) => {
       phone: phone || '',
       role: 'admin',
       status: 'active',
-      access_level: 'full'
+      access_level: 'full',
+      generated_username: username,
+      generated_password: password,
+      credentials_generated_at: new Date()
+    });
+    
+    console.log('✅ Admin user created successfully:', {
+      id: admin.id,
+      username: admin.username,
+      email: admin.email
     });
 
     // Create business for the admin
+    console.log('🔄 Creating business for admin:', {
+      business_id: `business_${username}_${Date.now()}`,
+      name: businessName,
+      type: businessType || 'retail',
+      address: businessAddress || '',
+      phone: businessPhone || phone || '',
+      email: businessEmail || email,
+      owner_id: admin.id,
+      status: 'active'
+    });
+    
     const business = await Business.create({
       business_id: `business_${username}_${Date.now()}`,
       name: businessName,
@@ -290,8 +369,24 @@ router.post('/create-admin', auth, async (req, res) => {
       owner_id: admin.id,
       status: 'active'
     });
+    
+    console.log('✅ Business created successfully:', {
+      id: business.id,
+      business_id: business.business_id,
+      name: business.name
+    });
 
     // Create subscription for the admin
+    console.log('🔄 Creating subscription for admin:', {
+      user_id: admin.id,
+      plan: 'premium',
+      status: 'trial',
+      amount: 0.00,
+      billing_cycle: 'monthly',
+      start_date: new Date(),
+      next_payment: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    });
+    
     const subscription = await Subscription.create({
       user_id: admin.id,
       plan: 'premium',
@@ -301,7 +396,15 @@ router.post('/create-admin', auth, async (req, res) => {
       start_date: new Date(),
       next_payment: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
     });
+    
+    console.log('✅ Subscription created successfully:', {
+      id: subscription.id,
+      user_id: subscription.user_id,
+      plan: subscription.plan
+    });
 
+    console.log('🎉 Admin creation completed successfully!');
+    
     res.status(201).json({
       message: 'Admin user created successfully',
       user: {
@@ -310,7 +413,10 @@ router.post('/create-admin', auth, async (req, res) => {
         name: admin.name,
         email: admin.email,
         role: admin.role,
-        status: admin.status
+        status: admin.status,
+        generated_username: admin.generated_username,
+        generated_password: admin.generated_password,
+        credentials_generated_at: admin.credentials_generated_at
       },
       business: {
         id: business.id,
@@ -329,8 +435,33 @@ router.post('/create-admin', auth, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error creating admin user:', error);
-    res.status(500).json({ error: 'Failed to create admin user.' });
+    console.error('❌ Error creating admin user:', error);
+    console.error('❌ Error details:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack
+    });
+    
+    // Handle specific database errors
+    if (error.name === 'SequelizeValidationError') {
+      return res.status(400).json({ 
+        error: 'Validation error', 
+        details: error.errors.map(err => err.message) 
+      });
+    } else if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(400).json({ 
+        error: 'Username or email already exists' 
+      });
+    } else if (error.name === 'SequelizeConnectionError') {
+      return res.status(500).json({ 
+        error: 'Database connection error' 
+      });
+    }
+    
+    res.status(500).json({ 
+      error: 'Failed to create admin user.',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 

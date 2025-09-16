@@ -28,7 +28,7 @@ import { useAuth } from '../../../../app/providers/AuthContext';
 import { generateUsername, generatePassword, generateEmailContent, sendEmail } from '../../../../lib/utils/userGenerator';
 
 const AdminManagement = () => {
-  const { addNewUser, getAllUsers, updateUserStatus, updateUserDetails, deleteUser, addNewAdminWithBusiness, addSubUserToBusiness, user: currentUser } = useAuth();
+  const { addNewUser, getAllUsers, fetchAllUsers, updateUserStatus, updateUserDetails, deleteUser, addNewAdminWithBusiness, addSubUserToBusiness, user: currentUser } = useAuth();
   const [admins, setAdmins] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -72,13 +72,13 @@ const AdminManagement = () => {
     loadAdmins();
   }, []);
 
-  const loadAdmins = () => {
+  const loadAdmins = async () => {
     try {
       setLoading(true);
       console.log('🔄 Loading users from AuthContext...');
       console.log('👤 Current user:', currentUser);
       
-      const allUsers = getAllUsers();
+      const allUsers = await fetchAllUsers(); // Fetch fresh data from database
       console.log('📋 All users from AuthContext:', allUsers);
       
       let filteredUsers = [];
@@ -91,7 +91,7 @@ const AdminManagement = () => {
       } else if (currentUser?.role === 'admin') {
         // Admin can only see their own sub-users (users with same businessId)
         filteredUsers = allUsers.filter(user => 
-          user.businessId === currentUser.businessId && user.role !== 'admin'
+          user.business_id === currentUser.business_id && user.role !== 'admin'
         );
         console.log('👥 Admin view: Only sub-users in same business');
       } else {
@@ -190,8 +190,18 @@ const AdminManagement = () => {
       if (currentUser?.role === 'owner') {
         // Owner is adding a new admin with business
         console.log('🔄 Owner adding new admin with business data:', newAdmin);
+        console.log('📋 Form validation check:', {
+          firstName: newAdmin.firstName,
+          lastName: newAdmin.lastName,
+          email: newAdmin.email,
+          businessName: newAdmin.businessName,
+          hasFirstName: !!newAdmin.firstName,
+          hasLastName: !!newAdmin.lastName,
+          hasEmail: !!newAdmin.email,
+          hasBusinessName: !!newAdmin.businessName
+        });
 
-        result = await addNewAdminWithBusiness({
+        const adminData = {
           firstName: newAdmin.firstName,
           lastName: newAdmin.lastName,
           email: newAdmin.email,
@@ -201,10 +211,39 @@ const AdminManagement = () => {
           businessAddress: newAdmin.businessAddress || '',
           businessPhone: newAdmin.businessPhone || newAdmin.phone || '',
           businessEmail: newAdmin.businessEmail || newAdmin.email
-        });
+        };
+
+        console.log('📤 Sending admin data to API:', adminData);
+
+        result = await addNewAdminWithBusiness(adminData);
 
         console.log('✅ Admin with business added successfully:', result);
-        toast.success('Admin with business added successfully! They can now manage their own business independently.');
+        
+        // Show generated credentials
+        if (result.credentials) {
+          const credentialsMessage = `
+🎉 Admin Created Successfully!
+
+👤 Name: ${newAdmin.firstName} ${newAdmin.lastName}
+📧 Email: ${newAdmin.email}
+🔑 Username: ${result.credentials.username}
+🔒 Password: ${result.credentials.password}
+
+📧 Email notification has been sent to the admin.
+          `.trim();
+          
+          toast.success(credentialsMessage, {
+            duration: 10000, // Show for 10 seconds
+            position: "top-center"
+          });
+          
+          // Also show in console for easy copying
+          console.log('🔐 Generated Credentials:');
+          console.log('Username:', result.credentials.username);
+          console.log('Password:', result.credentials.password);
+        } else {
+          toast.success('Admin with business added successfully! They can now manage their own business independently.');
+        }
       } else if (currentUser?.role === 'admin') {
         // Admin is adding a sub-user to their business
         console.log('🔄 Admin adding new sub-user to business:', newAdmin);

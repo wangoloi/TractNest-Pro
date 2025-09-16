@@ -3,11 +3,20 @@ const { User } = require('../models');
 
 const auth = async (req, res, next) => {
   try {
+    console.log('🔐 Auth middleware - checking request:', {
+      method: req.method,
+      url: req.url,
+      hasAuthHeader: !!req.header('Authorization')
+    });
+    
     const token = req.header('Authorization')?.replace('Bearer ', '');
     
     if (!token) {
+      console.log('❌ Auth middleware - no token provided');
       return res.status(401).json({ error: 'Access denied. No token provided.' });
     }
+    
+    console.log('🔑 Auth middleware - token found, validating...');
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-super-secret-jwt-key');
     const user = await User.findByPk(decoded.userId);
@@ -21,8 +30,14 @@ const auth = async (req, res, next) => {
     }
 
     req.user = user;
+    console.log('✅ Auth middleware - user authenticated:', {
+      id: user.id,
+      username: user.username,
+      role: user.role
+    });
     next();
   } catch (error) {
+    console.log('❌ Auth middleware - error:', error.message);
     if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({ error: 'Invalid token.' });
     }

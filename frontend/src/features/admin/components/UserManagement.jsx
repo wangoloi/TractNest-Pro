@@ -8,7 +8,7 @@ import { formatCredentialsMessage, generateEmailContent } from '../../../lib/uti
 import EmailNotification from '../../../components/email/EmailNotification';
 
 const UserManagement = () => {
-  const { getAllUsers, updateUserStatus, addNewUser, user: currentUser } = useAuth();
+  const { getAllUsers, fetchAllUsers, updateUserStatus, addNewUser, deleteUser, user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -35,11 +35,36 @@ const UserManagement = () => {
     loadUsers();
   }, []);
 
-  const loadUsers = () => {
+  // Reset filter if non-owner has 'admins' filter selected
+  useEffect(() => {
+    if (currentUser?.role !== 'owner' && activeFilter === 'admins') {
+      setActiveFilter('all');
+    }
+  }, [currentUser?.role, activeFilter]);
+
+  const loadUsers = async () => {
     setLoading(true);
     try {
-      const allUsers = getAllUsers();
-      setUsers(allUsers);
+      await fetchAllUsers(); // Fetch fresh data from database
+      const allUsers = getAllUsers(); // Get current state
+      
+      // Role-based access control: Only owners can see all admins
+      let filteredUsers = allUsers;
+      
+      if (currentUser?.role !== 'owner') {
+        // Non-owners (admins) can only see users from their own business
+        // and cannot see other admins or owners
+        filteredUsers = allUsers.filter(user => {
+          // Don't show other admins or owners
+          if (user.role === 'admin' || user.role === 'owner') {
+            return false;
+          }
+          // Only show users from the same business
+          return user.business_id === currentUser?.business_id;
+        });
+      }
+      
+      setUsers(filteredUsers);
     } catch (error) {
       console.error('Error loading users:', error);
     } finally {
@@ -51,9 +76,9 @@ const UserManagement = () => {
   const filteredUsers = users.filter(user => {
     switch (activeFilter) {
       case 'active':
-        return user.status === 'active' && !user.isBlocked;
+        return user.status === 'active' && !user.is_blocked;
       case 'blocked':
-        return user.isBlocked;
+        return user.is_blocked;
       case 'admins':
         return user.role === 'admin';
       case 'inactive':
@@ -74,12 +99,12 @@ const UserManagement = () => {
     setShowUnblockModal(true);
   };
 
-  const confirmBlockUser = () => {
+  const confirmBlockUser = async () => {
     if (!selectedUser || !blockReason.trim()) return;
 
     try {
-      updateUserStatus(selectedUser.username, 'blocked', blockReason, currentUser.username);
-      loadUsers(); // Reload users
+      await updateUserStatus(selectedUser.id, 'blocked', blockReason, currentUser.username);
+      await loadUsers(); // Reload users
       setShowBlockModal(false);
       setSelectedUser(null);
       setBlockReason('');
@@ -89,12 +114,12 @@ const UserManagement = () => {
     }
   };
 
-  const confirmUnblockUser = () => {
+  const confirmUnblockUser = async () => {
     if (!selectedUser) return;
 
     try {
-      updateUserStatus(selectedUser.username, 'active', null, null);
-      loadUsers(); // Reload users
+      await updateUserStatus(selectedUser.id, 'active', null, null);
+      await loadUsers(); // Reload users
       setShowUnblockModal(false);
       setSelectedUser(null);
     } catch (error) {
@@ -104,7 +129,7 @@ const UserManagement = () => {
   };
 
   const getStatusBadge = (user) => {
-    if (user.isBlocked) {
+    if (user.is_blocked) {
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
           <Lock size={12} className="mr-1" />
@@ -217,25 +242,26 @@ const UserManagement = () => {
     },
     {
       key: 'credentials',
-      header: 'Stored Credentials',
-      accessor: (user) => user.generatedCredentials,
+      header: 'Generated Credentials',
+      accessor: (user) => user.generated_username,
       render: (user) => {
-        if (!user.generatedCredentials) return <span className="text-gray-400">-</span>;
+        if (!user.generated_username || !user.generated_password) {
+          return <span className="text-gray-400">-</span>;
+        }
         
         return (
           <div className="text-sm">
             <div className="font-medium text-gray-900">
-              {user.generatedCredentials.username}
+              Username: {user.generated_username}
             </div>
             <div className="text-xs text-gray-500 font-mono">
-              {user.generatedCredentials.password}
+              Password: {user.generated_password}
             </div>
-            <div className="text-xs text-gray-400">
-              Generated: {new Date(user.generatedCredentials.generatedAt).toLocaleDateString()}
-            </div>
-            <div className="text-xs text-gray-400">
-              By: {user.generatedCredentials.generatedBy}
-            </div>
+            {user.credentials_generated_at && (
+              <div className="text-xs text-gray-400">
+                Generated: {new Date(user.credentials_generated_at).toLocaleDateString()}
+              </div>
+            )}
           </div>
         );
       }
@@ -255,14 +281,14 @@ const UserManagement = () => {
           
           <button
             onClick={() => handleBlockUser(user)}
-            disabled={user.isBlocked || user.role === 'owner' || user.username === currentUser?.username}
+            disabled={user.is_blocked || user.role === 'owner' || user.username === currentUser?.username}
             className={`p-1 rounded transition-colors ${
-              user.isBlocked || user.role === 'owner' || user.username === currentUser?.username
+              user.is_blocked || user.role === 'owner' || user.username === currentUser?.username
                 ? 'text-gray-400 cursor-not-allowed'
                 : 'text-red-600 hover:text-red-800 hover:bg-red-50'
             }`}
             title={
-              user.isBlocked 
+              user.is_blocked 
                 ? 'User is already blocked' 
                 : user.role === 'owner' 
                 ? 'Cannot block owner' 
@@ -334,9 +360,17 @@ const UserManagement = () => {
     setShowModal(true);
   };
 
-  const handleDelete = (user) => {
-    if (window.confirm(`Are you sure you want to delete ${user.name}?`)) {
-      setUsers(users.filter(u => u.username !== user.username));
+  const handleDelete = async (user) => {
+    if (window.confirm(`Are you sure you want to delete ${user.name}? This action cannot be undone.`)) {
+      try {
+        await deleteUser(user.username);
+        // Reload users to reflect the deletion
+        loadUsers();
+        alert('User deleted successfully');
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        alert(`Failed to delete user: ${error.message}`);
+      }
     }
   };
 
@@ -467,6 +501,30 @@ const UserManagement = () => {
         </button>
       </div>
 
+      {/* Access Level Indicator */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+        <div className="flex items-center gap-3">
+          <div className={`p-2 rounded-lg ${
+            currentUser?.role === 'owner' 
+              ? 'bg-indigo-100 text-indigo-600' 
+              : 'bg-purple-100 text-purple-600'
+          }`}>
+            <Shield size={20} />
+          </div>
+          <div>
+            <p className="font-medium text-gray-900">
+              {currentUser?.role === 'owner' ? 'Owner Access' : 'Admin Access'}
+            </p>
+            <p className="text-sm text-gray-600">
+              {currentUser?.role === 'owner' 
+                ? 'You can view and manage all users including admins and owners'
+                : `You can view and manage users from your business (${currentUser?.businessName || 'your business'})`
+              }
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <button
@@ -498,7 +556,7 @@ const UserManagement = () => {
             <div>
               <p className="text-sm font-medium text-gray-600">Active Users</p>
               <p className="text-2xl font-bold text-green-600">
-                {users.filter(u => u.status === 'active' && !u.isBlocked).length}
+                {users.filter(u => u.status === 'active' && !u.is_blocked).length}
               </p>
             </div>
             <div className={`p-3 rounded-lg ${
@@ -519,7 +577,7 @@ const UserManagement = () => {
             <div>
               <p className="text-sm font-medium text-gray-600">Blocked Users</p>
               <p className="text-2xl font-bold text-red-600">
-                {users.filter(u => u.isBlocked).length}
+                {users.filter(u => u.is_blocked).length}
               </p>
             </div>
             <div className={`p-3 rounded-lg ${
@@ -530,26 +588,29 @@ const UserManagement = () => {
           </div>
         </button>
 
-        <button
-          onClick={() => setActiveFilter('admins')}
-          className={`bg-white rounded-xl shadow-sm p-6 border border-gray-100 transition-all duration-200 hover:shadow-md ${
-            activeFilter === 'admins' ? 'ring-2 ring-purple-500 bg-purple-50' : 'hover:bg-gray-50'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Admins</p>
-              <p className="text-2xl font-bold text-purple-600">
-                {users.filter(u => u.role === 'admin').length}
-              </p>
+        {/* Only show Admins filter for owners */}
+        {currentUser?.role === 'owner' && (
+          <button
+            onClick={() => setActiveFilter('admins')}
+            className={`bg-white rounded-xl shadow-sm p-6 border border-gray-100 transition-all duration-200 hover:shadow-md ${
+              activeFilter === 'admins' ? 'ring-2 ring-purple-500 bg-purple-50' : 'hover:bg-gray-50'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Admins</p>
+                <p className="text-2xl font-bold text-purple-600">
+                  {users.filter(u => u.role === 'admin').length}
+                </p>
+              </div>
+              <div className={`p-3 rounded-lg ${
+                activeFilter === 'admins' ? 'bg-purple-200' : 'bg-purple-100'
+              }`}>
+                <Shield size={24} className="text-purple-600" />
+              </div>
             </div>
-            <div className={`p-3 rounded-lg ${
-              activeFilter === 'admins' ? 'bg-purple-200' : 'bg-purple-100'
-            }`}>
-              <Shield size={24} className="text-purple-600" />
-            </div>
-          </div>
-        </button>
+          </button>
+        )}
       </div>
 
       {/* Filter Indicator */}

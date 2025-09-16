@@ -76,6 +76,21 @@ const User = sequelize.define('User', {
     type: DataTypes.DATE,
     allowNull: true
   },
+  generated_username: {
+    type: DataTypes.STRING(50),
+    allowNull: true,
+    comment: 'Auto-generated username for admin users'
+  },
+  generated_password: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+    comment: 'Auto-generated password for admin users'
+  },
+  credentials_generated_at: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    comment: 'When credentials were generated'
+  },
   created_at: {
     type: DataTypes.DATE,
     allowNull: false,

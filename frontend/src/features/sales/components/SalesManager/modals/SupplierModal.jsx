@@ -87,3 +87,7 @@ const SupplierModal = ({ showSupplierModal, setShowSupplierModal, selectedStockI
 export default SupplierModal;
 
 
+
+
+
+

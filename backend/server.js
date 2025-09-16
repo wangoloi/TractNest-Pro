@@ -80,14 +80,18 @@ app.use('*', (req, res) => {
 // Database connection and server start
 async function startServer() {
   try {
+    console.log('🔄 Starting server initialization...');
+    
     await sequelize.authenticate();
     console.log('✅ Database connection established successfully.');
     
     // Sync database (create tables if they don't exist)
-    await sequelize.sync({ alter: true });
+    console.log('🔄 Synchronizing database...');
+    await sequelize.sync({ force: false });
     console.log('✅ Database synchronized successfully.');
     
     // Initialize default data
+    console.log('🔄 Initializing default data...');
     await require('./config/initData')();
     console.log('✅ Default data initialized successfully.');
     
@@ -98,6 +102,11 @@ async function startServer() {
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
+    console.error('❌ Error details:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack
+    });
     process.exit(1);
   }
 }

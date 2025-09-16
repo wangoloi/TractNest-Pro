@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useContext } from "react";
-import { toast } from "react-toastify";
 import { AuthContext } from "./AuthContextDef";
 import { 
   loginUser, 
@@ -8,8 +7,6 @@ import {
   getAuthState, 
   getAllUsersFromDB, 
   updateUserStatusInDB,
-  updateUserDetailsInDB,
-  addSubUserToBusinessInDB,
   deleteUserFromDB,
   createAdminUser,
   getAuthToken
@@ -128,8 +125,8 @@ const AuthProvider = ({ children }) => {
     return false;
   };
 
-  // Function to get all users from database (async)
-  const fetchAllUsers = async () => {
+  // Function to get all users from database
+  const getAllUsers = async () => {
     try {
       const token = getAuthToken();
       if (!token) {
@@ -143,11 +140,6 @@ const AuthProvider = ({ children }) => {
       console.error('Error fetching users:', error);
       throw error;
     }
-  };
-
-  // Function to get current users state (synchronous)
-  const getAllUsers = () => {
-    return users;
   };
 
   // Function to update user status
@@ -184,41 +176,6 @@ const AuthProvider = ({ children }) => {
       return true;
     } catch (error) {
       console.error('Error updating user status:', error);
-      throw error;
-    }
-  };
-
-  // Function to update user details
-  const updateUserDetails = async (username, userDetails) => {
-    try {
-      console.log('🔄 Updating user details for:', username, 'with data:', userDetails);
-      
-      const token = getAuthToken();
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
-      // Update user details in database
-      const updatedUser = await updateUserDetailsInDB(username, userDetails, token);
-      
-      // Update local users state
-      setUsers(prevUsers => 
-        prevUsers.map(user => 
-          user.username === username 
-            ? { 
-                ...user, 
-                ...userDetails,
-                // Update the name field if it was provided
-                name: userDetails.name || user.name
-              }
-            : user
-        )
-      );
-
-      console.log('✅ User details updated successfully');
-      return updatedUser;
-    } catch (error) {
-      console.error('❌ Error updating user details:', error);
       throw error;
     }
   };
@@ -271,9 +228,6 @@ const AuthProvider = ({ children }) => {
         throw new Error('No authentication token found. Please log in again.');
       }
       
-      console.log('🔑 Using token for admin creation:', token ? 'Token exists' : 'No token');
-      console.log('👤 Current user:', user);
-      
       // Create admin user in the database via API
       const result = await createAdminUser({
         firstName,
@@ -289,61 +243,13 @@ const AuthProvider = ({ children }) => {
       
       console.log('✅ Admin created in database:', result);
       
-      // Send email notification with credentials
-      if (result.user && result.user.generated_username && result.user.generated_password) {
-        // Show toast notification with generated credentials
-        const credentialsMessage = `
-🎉 Admin Created Successfully!
-
-👤 User: ${adminData.firstName} ${adminData.lastName}
-🔑 Username: ${result.user.generated_username}
-🔒 Password: ${result.user.generated_password}
-
-📧 Email notification has been sent to ${adminData.email}
-        `.trim();
-        
-        toast.success(credentialsMessage, {
-          duration: 15000, // Show for 15 seconds
-          position: "top-center"
-        });
-        
-        // Also show in console for easy copying
-        console.log('🔐 Generated Credentials:');
-        console.log('Username:', result.user.generated_username);
-        console.log('Password:', result.user.generated_password);
-        
-        try {
-          const { generateEmailContent, sendEmail } = await import('../../lib/utils/userGenerator');
-          const emailContent = generateEmailContent(
-            result.user.generated_username,
-            result.user.generated_password,
-            `${adminData.firstName} ${adminData.lastName}`,
-            user.name || 'TrackNest Pro Owner'
-          );
-          
-          const emailResult = await sendEmail(adminData.email, emailContent.subject, emailContent.body);
-          console.log('📧 Email notification result:', emailResult);
-        } catch (emailError) {
-          console.error('❌ Failed to send email notification:', emailError);
-          // Don't throw error - admin creation should still succeed
-        }
-      } else {
-        console.log('⚠️ No generated credentials found in response:', result);
-        toast.success('Admin created successfully!');
-      }
-      
       // Refresh users list
-      await fetchAllUsers();
+      await getAllUsers();
       
       return result;
       
     } catch (error) {
       console.error('❌ Error adding new admin with business:', error);
-      console.error('❌ Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      });
       throw error;
     }
   };
@@ -359,30 +265,6 @@ const AuthProvider = ({ children }) => {
       
     } catch (error) {
       console.error('❌ Error adding new user:', error);
-      throw error;
-    }
-  };
-
-  // Function to add sub-user to business
-  const addSubUserToBusiness = async (businessId, userData) => {
-    try {
-      console.log('🔄 Adding sub-user to business:', businessId, 'with data:', userData);
-      
-      const token = getAuthToken();
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
-      // Add sub-user to business in database
-      const result = await addSubUserToBusinessInDB(businessId, userData, token);
-      
-      // Refresh users list to get the updated data
-      await fetchAllUsers();
-      
-      console.log('✅ Sub-user added to business successfully');
-      return result;
-    } catch (error) {
-      console.error('❌ Error adding sub-user to business:', error);
       throw error;
     }
   };
@@ -457,13 +339,10 @@ const AuthProvider = ({ children }) => {
     userStatus,
     checkUserAccess,
     updateUserStatus,
-    updateUserDetails,
     deleteUser,
     getAllUsers,
-    fetchAllUsers,
     addNewUser,
     addNewAdminWithBusiness,
-    addSubUserToBusiness,
     getBusinessUsers,
     getSubUsers,
     hasBusinessAccess,
